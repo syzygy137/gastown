@@ -33,17 +33,25 @@ export async function tmuxListSessions() {
   });
 }
 
-export async function tmuxCapture(session, lines = 50) {
+const ANSI_RE = /\x1b\[[0-9;]*[a-zA-Z]|\x1b\].*?(?:\x07|\x1b\\)/g;
+
+export async function tmuxCapture(session, lines = 100, { stripAnsi = true } = {}) {
   const result = await exec('tmux', ['capture-pane', '-t', session, '-p', '-S', `-${lines}`]);
-  return result.ok ? result.stdout : `(no output for ${session})`;
+  if (!result.ok) return `(no output for ${session})`;
+  return stripAnsi ? result.stdout.replace(ANSI_RE, '') : result.stdout;
 }
 
-export async function tmuxCaptureAll(lines = 5) {
+export async function tmuxCaptureAll(lines = 100) {
   const sessions = await tmuxListSessions();
+  const filtered = sessions.filter(s => /^(gt-|hq-)/.test(s.name));
   const results = {};
-  await Promise.all(sessions.map(async (s) => {
-    const output = await tmuxCapture(s.name, lines);
-    results[s.name] = { output, lines: output.split('\n').filter(Boolean) };
+  await Promise.all(filtered.map(async (s) => {
+    try {
+      const output = await tmuxCapture(s.name, lines);
+      results[s.name] = { output, lines: output.split('\n').filter(Boolean) };
+    } catch {
+      // skip failing session
+    }
   }));
   return results;
 }

@@ -107,10 +107,34 @@ export function startActivityPoll() {
   }, 3000);
 }
 
+// Terminal stream poll — every 1.5 seconds (high-frequency, diff-based)
+let terminalInterval = null;
+let lastTerminalHashes = {};
+export function startTerminalPoll() {
+  if (terminalInterval) return;
+  terminalInterval = setInterval(async () => {
+    try {
+      const sessions = await tmuxCaptureAll(100);
+      const updates = {};
+      for (const [name, data] of Object.entries(sessions)) {
+        const hash = createHash('md5').update(data.output).digest('hex');
+        if (hash !== lastTerminalHashes[name]) {
+          lastTerminalHashes[name] = hash;
+          updates[name] = data;
+        }
+      }
+      if (Object.keys(updates).length > 0) {
+        broadcast({ type: 'terminals', sessions: updates });
+      }
+    } catch { /* ignore */ }
+  }, 1500);
+}
+
 export function startAll() {
   startDbPoll();
   startTmuxPoll();
   startGitPoll();
   startDaemonPoll();
   startActivityPoll();
+  startTerminalPoll();
 }

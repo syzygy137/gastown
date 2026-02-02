@@ -24,6 +24,7 @@ const initial = {
   activity: [],
   git: { branches: [], worktrees: [] },
   daemon: { running: false, output: '' },
+  terminals: {},
   formulas: [],
   config: {},
 };
@@ -46,6 +47,13 @@ function reducer(state, action) {
     case 'git': return { ...state, git: { branches: action.branches || [], worktrees: action.worktrees || [] } };
     case 'daemon': return { ...state, daemon: { running: action.running, output: action.output } };
     case 'activity': return { ...state, activity: action.agents || state.activity };
+    case 'terminals': {
+      const merged = { ...state.terminals };
+      for (const [name, data] of Object.entries(action.sessions)) {
+        merged[name] = data;
+      }
+      return { ...state, terminals: merged };
+    }
     case 'formulas': return { ...state, formulas: action.formulas };
     case 'config': return { ...state, config: action.config };
     default: return state;

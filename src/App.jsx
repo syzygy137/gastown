@@ -465,7 +465,7 @@ export default function App() {
               onDrillAgent={drillAgent}
             />
           )}
-          {activeTab === 'agents' && <AgentCards agents={state.agents} polecats={state.polecats} sessions={state.sessions} issues={state.issues} onSelectAgent={setSelectedAgent} changedIds={changedIds} />}
+          {activeTab === 'agents' && <AgentCards agents={state.agents} polecats={state.polecats} sessions={state.sessions} issues={state.issues} onSelectAgent={setSelectedAgent} onDrillIssue={drillIssue} changedIds={changedIds} />}
           {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
           {activeTab === 'issues' && (
             <IssueBoard

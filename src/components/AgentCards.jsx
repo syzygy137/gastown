@@ -3,6 +3,7 @@ import StatusBadge from './StatusBadge.jsx';
 import Tooltip from './Tooltip.jsx';
 import AgentAvatar from './AgentAvatar.jsx';
 import XpBar, { calculateAgentXp } from './XpBar.jsx';
+import ContextMenu, { useContextMenu } from './ContextMenu.jsx';
 
 function parseAgentMeta(desc) {
   if (!desc) return {};
@@ -180,7 +181,8 @@ function AgentTooltipContent({ agent, meta, session, role, state, hookBead, last
   );
 }
 
-export default function AgentCards({ agents, polecats = [], sessions = [], issues = [], onSelectAgent, changedIds = new Set() }) {
+export default function AgentCards({ agents, polecats = [], sessions = [], issues = [], onSelectAgent, onDrillIssue, changedIds = new Set() }) {
+  const [ctxMenu, showCtxMenu, hideCtxMenu] = useContextMenu();
   const allAgents = useMemo(() => {
     const agentIds = new Set(agents.map(a => a.id));
     const merged = [...agents];
@@ -199,6 +201,46 @@ export default function AgentCards({ agents, polecats = [], sessions = [], issue
   }, [agents, polecats]);
 
   if (!allAgents.length) return <div className="empty">No agents found</div>;
+
+  const ctxMenuItems = useMemo(() => {
+    if (!ctxMenu.visible || !ctxMenu.data) return [];
+    const { agent, sessionName, hasSession, hookBead, name } = ctxMenu.data;
+    const items = [];
+    items.push({
+      label: 'View terminal',
+      icon: '\u2590',
+      action: () => hasSession && onSelectAgent?.(sessionName),
+      disabled: !hasSession,
+    });
+    items.push({
+      label: 'Send nudge',
+      icon: '\u{1F4E2}',
+      action: async () => {
+        if (!name) return;
+        await fetch('/api/cmd', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cmd: 'gt', args: ['nudge', name, 'wake up'] }),
+        });
+      },
+      disabled: !hasSession || !name,
+    });
+    items.push({ separator: true });
+    items.push({
+      label: 'Copy agent ID',
+      icon: '\u{1F4CB}',
+      action: () => navigator.clipboard?.writeText(agent.id),
+    });
+    if (hookBead) {
+      items.push({
+        label: `View issue ${hookBead}`,
+        icon: '\u{1F4C4}',
+        action: () => onDrillIssue?.(hookBead),
+        disabled: !onDrillIssue,
+      });
+    }
+    return items;
+  }, [ctxMenu.visible, ctxMenu.data, onSelectAgent, onDrillIssue]);
 
   return (
     <div className="agent-grid-v2">
@@ -233,6 +275,7 @@ export default function AgentCards({ agents, polecats = [], sessions = [], issue
               className={`agent-card-v2 agent-card-v2--${state?.toLowerCase() || 'idle'}${hasSession ? ' agent-card-v2--clickable' : ''}${isWorkingPolecat ? ' agent-card-v2--barber-pole' : ''}${changedIds.has(a.id) ? ' bg-flash' : ''}`}
               style={{ borderLeftColor: roleColor }}
               onClick={() => hasSession && onSelectAgent?.(getSessionName(a.id))}
+              onContextMenu={e => showCtxMenu(e, { agent: a, sessionName: getSessionName(a.id), hasSession, hookBead, name: getNudgeName(a.id) })}
             >
               <div className="agent-card-v2__header">
                 <div className="agent-card-v2__header-left">
@@ -282,6 +325,9 @@ export default function AgentCards({ agents, polecats = [], sessions = [], issue
           </Tooltip>
         );
       })}
+      {ctxMenu.visible && ctxMenuItems.length > 0 && (
+        <ContextMenu items={ctxMenuItems} position={ctxMenu.position} onClose={hideCtxMenu} />
+      )}
     </div>
   );
 }

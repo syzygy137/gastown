@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useEffect, useRef } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import StatusBadge from './StatusBadge.jsx';
 import Tooltip from './Tooltip.jsx';
 import LinkedText from './LinkedText.jsx';
+import ContextMenu, { useContextMenu } from './ContextMenu.jsx';
 
 const COLUMNS = [
   { key: 'open', label: 'Open' },
@@ -149,6 +150,7 @@ export default function IssueBoard({ issues, dependencies = [], agents = [], pol
   const [typeFilter, setTypeFilter] = useState(_filterCache.type);
   const [sortBy, setSortBy] = useState(_filterCache.sort);
   const searchRef = useRef(null);
+  const [ctxMenu, showCtxMenu, hideCtxMenu] = useContextMenu();
 
   // Sync to cache on changes
   useEffect(() => { _filterCache.search = search; }, [search]);
@@ -255,6 +257,51 @@ export default function IssueBoard({ issues, dependencies = [], agents = [], pol
     };
   }, [sortBy]);
 
+  const slingIssue = useCallback(async (issueId) => {
+    await fetch('/api/cmd', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cmd: 'gt', args: ['sling', issueId] }),
+    });
+  }, []);
+
+  const ctxMenuItems = useMemo(() => {
+    if (!ctxMenu.visible || !ctxMenu.data) return [];
+    const issue = ctxMenu.data;
+    const items = [];
+    items.push({
+      label: 'Sling to rig',
+      icon: '\u27B3',
+      action: () => slingIssue(issue.id),
+    });
+    items.push({
+      label: 'Copy issue ID',
+      icon: '\u{1F4CB}',
+      action: () => navigator.clipboard?.writeText(issue.id),
+    });
+    items.push({ separator: true });
+    items.push({
+      label: 'Open detail view',
+      icon: '\u{1F4C4}',
+      action: () => onDrillIssue?.(issue.id),
+    });
+    const status = (issue.status || '').toLowerCase();
+    if (status !== 'closed') {
+      items.push({
+        label: 'Close issue',
+        icon: '\u2713',
+        action: async () => {
+          await fetch('/api/cmd', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cmd: 'bd', args: ['update', issue.id, '--status=closed'] }),
+          });
+        },
+      });
+    }
+    return items;
+  }, [ctxMenu.visible, ctxMenu.data, onDrillIssue, slingIssue]);
+
   const grouped = {};
   for (const col of COLUMNS) grouped[col.key] = [];
 
@@ -354,6 +401,7 @@ export default function IssueBoard({ issues, dependencies = [], agents = [], pol
                   data-issue-id={issue.id}
                   className={`issue-card${isExpanded ? ' issue-card--expanded' : ''}${issue.id === focusIssueId ? ' issue-card--focused' : ''}${changedIds.has(issue.id) ? ' bg-flash' : ''}`}
                   onClick={() => toggle(issue.id)}
+                  onContextMenu={e => showCtxMenu(e, issue)}
                 >
                   <div className="issue-card__header">
                     <span
@@ -463,6 +511,9 @@ export default function IssueBoard({ issues, dependencies = [], agents = [], pol
           )}
         </div>
       ))}
+      {ctxMenu.visible && ctxMenuItems.length > 0 && (
+        <ContextMenu items={ctxMenuItems} position={ctxMenu.position} onClose={hideCtxMenu} />
+      )}
     </div>
     </div>
   );

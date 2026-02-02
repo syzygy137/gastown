@@ -10,6 +10,7 @@ import Controls from './components/Controls.jsx';
 import MergeQueue from './components/MergeQueue.jsx';
 import MetricsBar from './components/MetricsBar.jsx';
 import AgentDetail from './components/AgentDetail.jsx';
+import FullscreenTerminal from './components/FullscreenTerminal.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
 import WorkTracker from './components/WorkTracker.jsx';
 import HealthDashboard from './components/HealthDashboard.jsx';
@@ -103,6 +104,7 @@ export default function App() {
   const [state, dispatch] = useReducer(reducer, initial);
   const [activeTab, setActiveTab] = useState('work');
   const [selectedAgent, setSelectedAgent] = useState(null);
+  const [fullscreenAgent, setFullscreenAgent] = useState(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [breadcrumbs, setBreadcrumbs] = useState([]); // [{label, action}]
   const [focusIssueId, setFocusIssueId] = useState(null);
@@ -265,8 +267,9 @@ export default function App() {
         return;
       }
 
-      // Escape — close palette, agent detail, or breadcrumbs
+      // Escape — close fullscreen, palette, agent detail, or breadcrumbs
       if (e.key === 'Escape') {
+        if (fullscreenAgent) { setFullscreenAgent(null); return; }
         if (paletteOpen) { setPaletteOpen(false); return; }
         if (selectedAgent) { setSelectedAgent(null); return; }
         if (breadcrumbs.length > 0) { breadcrumbBack(); return; }
@@ -306,7 +309,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleGlobalKey);
     return () => window.removeEventListener('keydown', handleGlobalKey);
-  }, [paletteOpen, selectedAgent, breadcrumbs, breadcrumbBack, clearBreadcrumbs]);
+  }, [paletteOpen, selectedAgent, fullscreenAgent, breadcrumbs, breadcrumbBack, clearBreadcrumbs]);
 
   const tabBadge = (id) => {
     switch (id) {
@@ -393,7 +396,7 @@ export default function App() {
           <span className="panel-collapse-icon">{terminalsCollapsed ? '\u25BC' : '\u25B2'}</span>
         </button>
         {!terminalsCollapsed && (
-          <LiveTerminals agents={state.agents} onSelectAgent={setSelectedAgent} changedIds={changedIds} />
+          <LiveTerminals agents={state.agents} onSelectAgent={setSelectedAgent} onFullscreenAgent={setFullscreenAgent} changedIds={changedIds} />
         )}
       </div>
 
@@ -475,11 +478,28 @@ export default function App() {
       </div>
 
       {/* Agent detail modal */}
-      {selectedAgent && (
+      {selectedAgent && !fullscreenAgent && (
         <AgentDetail
           session={selectedAgent}
           agents={state.agents}
           onClose={() => setSelectedAgent(null)}
+          onFullscreen={() => {
+            setFullscreenAgent(selectedAgent);
+            setSelectedAgent(null);
+          }}
+        />
+      )}
+
+      {/* Fullscreen terminal */}
+      {fullscreenAgent && (
+        <FullscreenTerminal
+          session={fullscreenAgent}
+          agents={state.agents}
+          onClose={() => setFullscreenAgent(null)}
+          onMinimize={() => {
+            setSelectedAgent(fullscreenAgent);
+            setFullscreenAgent(null);
+          }}
         />
       )}
 

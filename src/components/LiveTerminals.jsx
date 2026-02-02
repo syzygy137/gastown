@@ -47,7 +47,7 @@ const STATUS_INDICATOR = {
   idle:     { color: 'var(--text-dim)', label: 'IDL' },
 };
 
-function TerminalPane({ session, output, agent, onSelect, flash }) {
+function TerminalPane({ session, output, agent, onSelect, onFullscreen, flash }) {
   const termRef = useRef(null);
   const [userScrolled, setUserScrolled] = useState(false);
 
@@ -82,7 +82,11 @@ function TerminalPane({ session, output, agent, onSelect, flash }) {
             style={{ background: indicator.color, boxShadow: `0 0 4px ${indicator.color}` }}
             title={indicator.label}
           />
-          <span className="tgrid-pane__name">{displayName(session)}</span>
+          <span
+            className="tgrid-pane__name tgrid-pane__name--clickable"
+            onClick={e => { e.stopPropagation(); onFullscreen?.(session); }}
+            title="Open fullscreen terminal"
+          >{displayName(session)}</span>
         </div>
         <div className="tgrid-pane__badges">
           {role && <StatusBadge value={role} />}
@@ -106,7 +110,7 @@ function TerminalPane({ session, output, agent, onSelect, flash }) {
   );
 }
 
-export default function LiveTerminals({ agents = [], onSelectAgent, changedIds = new Set() }) {
+export default function LiveTerminals({ agents = [], onSelectAgent, onFullscreenAgent, changedIds = new Set() }) {
   const [captures, setCaptures] = useState({});
   const [cols, setCols] = useState(2);
 
@@ -183,6 +187,7 @@ export default function LiveTerminals({ agents = [], onSelectAgent, changedIds =
               output={data?.output || ''}
               agent={agent}
               onSelect={onSelectAgent}
+              onFullscreen={onFullscreenAgent}
               flash={flash}
             />
           );

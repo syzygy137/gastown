@@ -1,23 +1,11 @@
-import React, { useState, useEffect, useRef } from 'react';
-
-function relativeTime(isoString) {
-  if (!isoString) return '';
-  const diff = Math.max(0, Date.now() - new Date(isoString).getTime());
-  const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return `${seconds}s`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  return `${hours}h`;
-}
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 function extractNudgeName(sessionName) {
-  // gt-gastown-furiosa -> furiosa
   const m = sessionName.match(/^gt-\w+-(.+)$/);
   return m ? m[1] : null;
 }
 
-export default function AgentDetail({ session, agents = [], onClose, onFullscreen }) {
+export default function FullscreenTerminal({ session, agents = [], onClose, onMinimize }) {
   const [output, setOutput] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
   const [nudgeText, setNudgeText] = useState('');
@@ -26,20 +14,19 @@ export default function AgentDetail({ session, agents = [], onClose, onFullscree
   const outputRef = useRef(null);
   const nudgeInputRef = useRef(null);
 
-  // Find the matching agent metadata
+  // Find matching agent metadata
   const agent = agents.find(a => {
     if (a.id === session) return true;
-    // Try common mapping patterns for infrastructure agents
     const mapped = session
       .replace('gt-gastown-', 'gs-gastown-')
       .replace('gt-slop-', 'sl-slop-');
     if (a.id === mapped) return true;
-    // Try polecat pattern: gt-gastown-furiosa -> gs-gastown-polecat-furiosa
     const polecatMatch = session.match(/^gt-(\w+)-(.+)$/);
     if (polecatMatch && a.id === `gs-${polecatMatch[1]}-polecat-${polecatMatch[2]}`) return true;
     return false;
   });
 
+  // Poll terminal output every 1.5s
   useEffect(() => {
     if (!session) return;
     let cancelled = false;
@@ -55,9 +42,18 @@ export default function AgentDetail({ session, agents = [], onClose, onFullscree
     }
 
     capture();
-    const interval = setInterval(capture, 2000);
+    const interval = setInterval(capture, 1500);
     return () => { cancelled = true; clearInterval(interval); };
   }, [session]);
+
+  // Auto-scroll with manual scroll lock
+  const handleScroll = useCallback(() => {
+    if (!outputRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = outputRef.current;
+    const atBottom = scrollHeight - scrollTop - clientHeight < 30;
+    if (!atBottom && autoScroll) setAutoScroll(false);
+    if (atBottom && !autoScroll) setAutoScroll(true);
+  }, [autoScroll]);
 
   useEffect(() => {
     if (autoScroll && outputRef.current) {
@@ -65,13 +61,23 @@ export default function AgentDetail({ session, agents = [], onClose, onFullscree
     }
   }, [output, autoScroll]);
 
-  // Close on Escape
+  // Keyboard: Escape to close, Ctrl+Enter to send nudge
   useEffect(() => {
     function handleKey(e) {
-      if (e.key === 'Escape') onClose?.();
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        e.stopPropagation();
+        onClose?.();
+        return;
+      }
+      if (e.ctrlKey && e.key === 'Enter' && nudgeInputRef.current) {
+        e.preventDefault();
+        nudgeInputRef.current.form?.requestSubmit();
+        return;
+      }
     }
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    window.addEventListener('keydown', handleKey, true);
+    return () => window.removeEventListener('keydown', handleKey, true);
   }, [onClose]);
 
   const nudgeName = session ? extractNudgeName(session) : null;
@@ -109,57 +115,61 @@ export default function AgentDetail({ session, agents = [], onClose, onFullscree
   const hookBead = agent?.hook_bead || '';
 
   return (
-    <div className="agent-detail-overlay" onClick={onClose}>
-      <div className="agent-detail-modal" onClick={e => e.stopPropagation()}>
-        <div className="agent-detail-header">
-          <div className="agent-detail-info">
-            <span className="agent-detail-name">{displayName}</span>
-            {role && <span className="agent-detail-role">{role}</span>}
-            <span className={`agent-detail-state agent-detail-state--${state}`}>{state}</span>
-            {hookBead && <span className="agent-detail-hook">{hookBead}</span>}
+    <div className="fs-terminal-overlay">
+      <div className="fs-terminal">
+        <div className="fs-terminal__header">
+          <div className="fs-terminal__info">
+            <span className="fs-terminal__name">{displayName}</span>
+            {role && <span className="fs-terminal__role">{role}</span>}
+            <span className={`fs-terminal__state fs-terminal__state--${state}`}>{state}</span>
+            {hookBead && <span className="fs-terminal__hook">{hookBead}</span>}
           </div>
-          <div className="agent-detail-controls">
+          <div className="fs-terminal__controls">
             <button
-              className={`agent-detail-scroll-toggle ${autoScroll ? 'active' : ''}`}
+              className={`fs-terminal__scroll-toggle ${autoScroll ? 'active' : ''}`}
               onClick={() => setAutoScroll(s => !s)}
               title={autoScroll ? 'Auto-scroll ON' : 'Auto-scroll OFF'}
             >
               {autoScroll ? 'Auto' : 'Manual'}
             </button>
-            {onFullscreen && (
-              <button className="agent-detail-fullscreen" onClick={onFullscreen} title="Fullscreen terminal">
-                &#x26F6;
+            {onMinimize && (
+              <button className="fs-terminal__minimize" onClick={onMinimize} title="Minimize back to grid">
+                &#9723;
               </button>
             )}
-            <button className="agent-detail-close" onClick={onClose}>
+            <button className="fs-terminal__close" onClick={onClose} title="Close (Esc)">
               &times;
             </button>
           </div>
         </div>
-        <div className="agent-detail-terminal" ref={outputRef}>
+        <div
+          className="fs-terminal__output"
+          ref={outputRef}
+          onScroll={handleScroll}
+        >
           {output || '(no output)'}
         </div>
         {nudgeName && (
-          <form className="agent-detail-nudge" onSubmit={sendNudge}>
+          <form className="fs-terminal__nudge" onSubmit={sendNudge}>
             <input
               ref={nudgeInputRef}
-              className="agent-detail-nudge__input"
+              className="fs-terminal__nudge-input"
               type="text"
-              placeholder={`Nudge ${nudgeName}...`}
+              placeholder={`Nudge ${nudgeName}... (Ctrl+Enter to send)`}
               value={nudgeText}
               onChange={e => setNudgeText(e.target.value)}
               disabled={nudgeSending}
+              autoFocus
             />
             <button
-              className={`agent-detail-nudge__btn${nudgeResult === 'sent' ? ' agent-detail-nudge__btn--sent' : ''}`}
+              className={`fs-terminal__nudge-btn${nudgeResult === 'sent' ? ' fs-terminal__nudge-btn--sent' : ''}`}
               type="submit"
               disabled={nudgeSending || !nudgeText.trim()}
-              title="Send nudge"
             >
-              {nudgeSending ? '...' : nudgeResult === 'sent' ? 'Sent' : 'Nudge'}
+              {nudgeSending ? '...' : nudgeResult === 'sent' ? 'Sent' : 'Send'}
             </button>
             {nudgeResult && nudgeResult !== 'sent' && (
-              <span className="agent-detail-nudge__error">{nudgeResult}</span>
+              <span className="fs-terminal__nudge-error">{nudgeResult}</span>
             )}
           </form>
         )}

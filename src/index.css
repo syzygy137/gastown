@@ -2317,6 +2317,203 @@ body {
   font-size: 11px;
   color: var(--red);
 }
+.agent-detail-fullscreen {
+  font-size: 16px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+.agent-detail-fullscreen:hover { color: var(--text-bright); }
+
+/* ── Fullscreen Terminal ── */
+.fs-terminal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1500;
+  background: var(--bg);
+  animation: fs-terminal-in 0.2s ease-out;
+}
+@keyframes fs-terminal-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.fs-terminal {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+.fs-terminal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--border-accent);
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+}
+.fs-terminal__info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fs-terminal__name {
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--text-bright);
+  font-family: var(--font-mono);
+}
+.fs-terminal__role {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: rgba(193,127,36,0.15);
+  color: var(--accent);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.fs-terminal__state {
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-weight: 700;
+  background: rgba(138,125,101,0.15);
+  color: var(--text-dim);
+}
+.fs-terminal__state--active,
+.fs-terminal__state--in-progress,
+.fs-terminal__state--working {
+  background: rgba(90,158,62,0.15);
+  color: var(--green);
+}
+.fs-terminal__hook {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--cyan);
+}
+.fs-terminal__controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.fs-terminal__scroll-toggle {
+  font-size: 10px;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.fs-terminal__scroll-toggle.active {
+  border-color: var(--green);
+  color: var(--green);
+}
+.fs-terminal__minimize {
+  font-size: 16px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+.fs-terminal__minimize:hover { color: var(--accent); }
+.fs-terminal__close {
+  font-size: 22px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  transition: color 0.15s;
+}
+.fs-terminal__close:hover { color: var(--red); }
+.fs-terminal__output {
+  flex: 1;
+  padding: 16px 20px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-y: auto;
+  background: #1a1208;
+  color: #5a9e3e;
+  text-shadow: 0 0 2px rgba(90,158,62,0.3);
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.04) 2px, rgba(0,0,0,0.04) 4px);
+  word-break: break-word;
+}
+.fs-terminal__nudge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border-accent);
+  background: var(--bg-elevated);
+  flex-shrink: 0;
+}
+.fs-terminal__nudge-input {
+  flex: 1;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-family: var(--font-mono);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-bright);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.fs-terminal__nudge-input:focus {
+  border-color: var(--accent);
+}
+.fs-terminal__nudge-input::placeholder {
+  color: var(--text-dim);
+}
+.fs-terminal__nudge-btn {
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 700;
+  background: rgba(193,127,36,0.15);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.fs-terminal__nudge-btn:hover:not(:disabled) {
+  background: rgba(193,127,36,0.3);
+}
+.fs-terminal__nudge-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.fs-terminal__nudge-btn--sent {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(90,158,62,0.15);
+}
+.fs-terminal__nudge-error {
+  font-size: 11px;
+  color: var(--red);
+}
+
+/* Light theme overrides for fullscreen terminal */
+[data-theme="light"] .fs-terminal__output {
+  background: #f5f0e8;
+  color: #2d5016;
+  text-shadow: none;
+  background-image: none;
+}
 
 /* ── Quick Nudge (agent cards) ── */
 .quick-nudge {
@@ -2905,6 +3102,14 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.tgrid-pane__name--clickable {
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.tgrid-pane__name--clickable:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .tgrid-pane__badges {

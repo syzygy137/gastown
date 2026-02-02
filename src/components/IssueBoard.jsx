@@ -112,7 +112,7 @@ function parseAgentMeta(desc) {
   return meta;
 }
 
-export default function IssueBoard({ issues, dependencies = [], agents = [], polecats = [], focusIssueId, onClearFocus, onDrillAgent, onDrillIssue }) {
+export default function IssueBoard({ issues, dependencies = [], agents = [], polecats = [], focusIssueId, onClearFocus, onDrillAgent, onDrillIssue, changedIds = new Set() }) {
   const [expanded, setExpanded] = useState(new Set());
 
   const hookMap = useMemo(() => {
@@ -189,7 +189,7 @@ export default function IssueBoard({ issues, dependencies = [], agents = [], pol
               <Tooltip key={issue.id} content={tooltipText} delay={400}>
                 <div
                   data-issue-id={issue.id}
-                  className={`issue-card${isExpanded ? ' issue-card--expanded' : ''}${issue.id === focusIssueId ? ' issue-card--focused' : ''}`}
+                  className={`issue-card${isExpanded ? ' issue-card--expanded' : ''}${issue.id === focusIssueId ? ' issue-card--focused' : ''}${changedIds.has(issue.id) ? ' bg-flash' : ''}`}
                   onClick={() => toggle(issue.id)}
                 >
                   <div className="issue-card__header">

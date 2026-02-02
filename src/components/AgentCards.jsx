@@ -111,7 +111,7 @@ function AgentTooltipContent({ agent, meta, session, role, state, hookBead, last
   );
 }
 
-export default function AgentCards({ agents, polecats = [], sessions = [], issues = [], onSelectAgent }) {
+export default function AgentCards({ agents, polecats = [], sessions = [], issues = [], onSelectAgent, changedIds = new Set() }) {
   const allAgents = useMemo(() => {
     const agentIds = new Set(agents.map(a => a.id));
     const merged = [...agents];
@@ -161,7 +161,7 @@ export default function AgentCards({ agents, polecats = [], sessions = [], issue
             }
           >
             <div
-              className={`agent-card-v2 agent-card-v2--${state?.toLowerCase() || 'idle'}${hasSession ? ' agent-card-v2--clickable' : ''}${isWorkingPolecat ? ' agent-card-v2--barber-pole' : ''}`}
+              className={`agent-card-v2 agent-card-v2--${state?.toLowerCase() || 'idle'}${hasSession ? ' agent-card-v2--clickable' : ''}${isWorkingPolecat ? ' agent-card-v2--barber-pole' : ''}${changedIds.has(a.id) ? ' bg-flash' : ''}`}
               style={{ borderLeftColor: roleColor }}
               onClick={() => hasSession && onSelectAgent?.(getSessionName(a.id))}
             >

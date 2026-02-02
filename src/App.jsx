@@ -16,6 +16,7 @@ import { useToast } from './components/Toast.jsx';
 import LiveTerminals from './components/LiveTerminals.jsx';
 import AchievementToast, { useAchievements } from './components/AchievementToast.jsx';
 import ThemeToggle from './components/ThemeToggle.jsx';
+import useBackgroundTab from './hooks/useBackgroundTab.js';
 
 const initial = {
   connected: false,
@@ -109,6 +110,9 @@ export default function App() {
   const retryRef = useRef(null);
   const addToast = useToast();
   const { toasts, checkAchievements, dismissToast } = useAchievements();
+
+  // Background tab awareness: favicon badge, title count, flash on return
+  const { changedIds } = useBackgroundTab(state);
 
   // Track previous state for change detection
   const prevRef = useRef({ mailIds: new Set(), agentStates: {}, issueStates: {} });
@@ -387,7 +391,7 @@ export default function App() {
           <span className="panel-collapse-icon">{terminalsCollapsed ? '\u25BC' : '\u25B2'}</span>
         </button>
         {!terminalsCollapsed && (
-          <LiveTerminals agents={state.agents} onSelectAgent={setSelectedAgent} />
+          <LiveTerminals agents={state.agents} onSelectAgent={setSelectedAgent} changedIds={changedIds} />
         )}
       </div>
 
@@ -425,7 +429,7 @@ export default function App() {
               onDrillAgent={drillAgent}
             />
           )}
-          {activeTab === 'agents' && <AgentCards agents={state.agents} polecats={state.polecats} sessions={state.sessions} issues={state.issues} onSelectAgent={setSelectedAgent} />}
+          {activeTab === 'agents' && <AgentCards agents={state.agents} polecats={state.polecats} sessions={state.sessions} issues={state.issues} onSelectAgent={setSelectedAgent} changedIds={changedIds} />}
           {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
           {activeTab === 'issues' && (
             <IssueBoard
@@ -437,6 +441,7 @@ export default function App() {
               onClearFocus={() => setFocusIssueId(null)}
               onDrillAgent={drillAgent}
               onDrillIssue={drillIssue}
+              changedIds={changedIds}
             />
           )}
           {activeTab === 'merge-queue' && <MergeQueue issues={state.issues} events={state.events} />}
@@ -446,6 +451,7 @@ export default function App() {
               agents={state.agents}
               onDrillAgent={drillAgent}
               onDrillIssue={drillIssue}
+              changedIds={changedIds}
             />
           )}
           {activeTab === 'events' && <EventTimeline events={state.events} />}

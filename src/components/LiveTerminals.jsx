@@ -47,7 +47,7 @@ const STATUS_INDICATOR = {
   idle:     { color: 'var(--text-dim)', label: 'IDL' },
 };
 
-function TerminalPane({ session, output, agent, onSelect }) {
+function TerminalPane({ session, output, agent, onSelect, flash }) {
   const termRef = useRef(null);
   const [userScrolled, setUserScrolled] = useState(false);
 
@@ -72,7 +72,7 @@ function TerminalPane({ session, output, agent, onSelect }) {
 
   return (
     <div
-      className={`tgrid-pane ${isActive ? 'tgrid-pane--active' : ''}`}
+      className={`tgrid-pane ${isActive ? 'tgrid-pane--active' : ''}${flash ? ' bg-flash' : ''}`}
       onClick={() => onSelect?.(session)}
     >
       <div className="tgrid-pane__header">
@@ -106,7 +106,7 @@ function TerminalPane({ session, output, agent, onSelect }) {
   );
 }
 
-export default function LiveTerminals({ agents = [], onSelectAgent }) {
+export default function LiveTerminals({ agents = [], onSelectAgent, changedIds = new Set() }) {
   const [captures, setCaptures] = useState({});
   const [cols, setCols] = useState(2);
 
@@ -175,6 +175,7 @@ export default function LiveTerminals({ agents = [], onSelectAgent }) {
           const data = captures[session];
           const agentId = sessionToAgentId(session);
           const agent = agentMap[session] || agentMap[agentId] || null;
+          const flash = changedIds.has(agentId) || (agent && changedIds.has(agent.id));
           return (
             <TerminalPane
               key={session}
@@ -182,6 +183,7 @@ export default function LiveTerminals({ agents = [], onSelectAgent }) {
               output={data?.output || ''}
               agent={agent}
               onSelect={onSelectAgent}
+              flash={flash}
             />
           );
         })}

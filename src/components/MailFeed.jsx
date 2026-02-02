@@ -71,7 +71,7 @@ function groupByThread(mail) {
   return order.map(key => ({ key, messages: threads.get(key) }));
 }
 
-function MailItem({ m, isReply, onDrillAgent, onDrillIssue }) {
+function MailItem({ m, isReply, onDrillAgent, onDrillIssue, flash }) {
   const [expanded, setExpanded] = useState(false);
   const recent = isRecent(m.created_at);
   const hasLongDesc = m.description && m.description.length > 200;
@@ -82,7 +82,7 @@ function MailItem({ m, isReply, onDrillAgent, onDrillIssue }) {
   return (
     <Tooltip content={tooltipText} delay={400}>
       <div
-        className={`mail-item${recent ? ' mail-unread' : ''}${isReply ? ' mail-reply' : ''}`}
+        className={`mail-item${recent ? ' mail-unread' : ''}${isReply ? ' mail-reply' : ''}${flash ? ' bg-flash' : ''}`}
         onClick={() => setExpanded(!expanded)}
         style={{ cursor: 'pointer' }}
       >
@@ -212,7 +212,7 @@ function ComposeForm({ agents, onClose }) {
   );
 }
 
-export default function MailFeed({ mail, agents = [], onDrillAgent, onDrillIssue }) {
+export default function MailFeed({ mail, agents = [], onDrillAgent, onDrillIssue, changedIds = new Set() }) {
   const [composing, setComposing] = useState(false);
   const threads = useMemo(() => groupByThread(mail), [mail]);
 
@@ -245,6 +245,7 @@ export default function MailFeed({ mail, agents = [], onDrillAgent, onDrillIssue
                 isReply={i > 0}
                 onDrillAgent={onDrillAgent}
                 onDrillIssue={onDrillIssue}
+                flash={changedIds.has(m.id || `${m.from}-${m.timestamp}`)}
               />
             ))}
           </div>

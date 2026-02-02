@@ -9,11 +9,11 @@ import TmuxViewer from './components/TmuxViewer.jsx';
 import Controls from './components/Controls.jsx';
 import MergeQueue from './components/MergeQueue.jsx';
 import MetricsBar from './components/MetricsBar.jsx';
-import ActivityFeed from './components/ActivityFeed.jsx';
 import AgentDetail from './components/AgentDetail.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
 import WorkTracker from './components/WorkTracker.jsx';
 import { useToast } from './components/Toast.jsx';
+import LiveTerminals from './components/LiveTerminals.jsx';
 
 const initial = {
   connected: false,
@@ -67,6 +67,7 @@ function reducer(state, action) {
 
 const TABS = [
   { id: 'work', label: 'Work' },
+  { id: 'agents', label: 'Agents' },
   { id: 'sessions', label: 'Sessions' },
   { id: 'issues', label: 'Issues' },
   { id: 'merge-queue', label: 'Merge Queue' },
@@ -74,6 +75,7 @@ const TABS = [
   { id: 'events', label: 'Events' },
   { id: 'formulas', label: 'Formulas' },
   { id: 'controls', label: 'Controls' },
+  { id: 'overview', label: 'Map' },
 ];
 
 export default function App() {
@@ -236,6 +238,7 @@ export default function App() {
         const active = state.agents.filter(a => a.hook_bead).length;
         return active || null;
       }
+      case 'agents': return state.agents.length || null;
       case 'sessions': return state.sessions.length || null;
       case 'issues': return state.issues.length || null;
       case 'merge-queue': {
@@ -279,59 +282,39 @@ export default function App() {
         </div>
       </header>
 
-      {/* Live activity strip */}
-      <div className="activity-strip">
-        <ActivityFeed
-          activity={state.activity}
-          agents={state.agents}
-          onSelectAgent={setSelectedAgent}
-        />
+      {/* Primary view: live terminal grid */}
+      <div className="live-terminals-area">
+        <LiveTerminals agents={state.agents} onSelectAgent={setSelectedAgent} />
       </div>
 
-      {/* Main area: left=overview+agents, right=tabbed detail */}
-      <div className="dashboard-main">
-        <div className="main-left">
-          <div className="panel overview-panel">
-            <div className="panel-header">Town Overview</div>
-            <TownOverview agents={state.agents} sessions={state.sessions} config={state.config} />
-          </div>
-          <div className="panel agents-panel">
-            <div className="panel-header">
-              Agents
-              <span className="badge badge-molecule">{state.agents.length}</span>
-            </div>
-            <div className="panel-body agents-scroll">
-              <AgentCards agents={state.agents} sessions={state.sessions} onSelectAgent={setSelectedAgent} />
-            </div>
-          </div>
+      {/* Bottom panel: tabbed detail views */}
+      <div className="dashboard-bottom">
+        <div className="tab-bar">
+          {TABS.map((t, idx) => (
+            <button
+              key={t.id}
+              className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(t.id)}
+            >
+              {t.label}
+              <span className="tab-shortcut">{idx + 1}</span>
+              {tabBadge(t.id) != null && (
+                <span className="tab-badge">{tabBadge(t.id)}</span>
+              )}
+            </button>
+          ))}
         </div>
-
-        <div className="main-right">
-          <div className="tab-bar">
-            {TABS.map((t, idx) => (
-              <button
-                key={t.id}
-                className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
-                onClick={() => setActiveTab(t.id)}
-              >
-                {t.label}
-                <span className="tab-shortcut">{idx + 1}</span>
-                {tabBadge(t.id) != null && (
-                  <span className="tab-badge">{tabBadge(t.id)}</span>
-                )}
-              </button>
-            ))}
-          </div>
-          <div className="tab-content">
-            {activeTab === 'work' && <WorkTracker issues={state.issues} agents={state.agents} />}
-            {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
-            {activeTab === 'issues' && <IssueBoard issues={state.issues} dependencies={state.dependencies} />}
-            {activeTab === 'merge-queue' && <MergeQueue issues={state.issues} events={state.events} />}
-            {activeTab === 'mail' && <MailFeed mail={state.mail} agents={state.agents} />}
-            {activeTab === 'events' && <EventTimeline events={state.events} />}
-            {activeTab === 'formulas' && <FormulaBrowser formulas={state.formulas} />}
-            {activeTab === 'controls' && <Controls daemon={state.daemon} agents={state.agents} />}
-          </div>
+        <div className="tab-content">
+          {activeTab === 'work' && <WorkTracker issues={state.issues} agents={state.agents} />}
+          {activeTab === 'agents' && <AgentCards agents={state.agents} sessions={state.sessions} onSelectAgent={setSelectedAgent} />}
+          {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
+          {activeTab === 'issues' && <IssueBoard issues={state.issues} dependencies={state.dependencies} />}
+          {activeTab === 'merge-queue' && <MergeQueue issues={state.issues} events={state.events} />}
+          {activeTab === 'mail' && <MailFeed mail={state.mail} agents={state.agents} />}
+          {activeTab === 'events' && <EventTimeline events={state.events} />}
+          {activeTab === 'formulas' && <FormulaBrowser formulas={state.formulas} />}
+          {activeTab === 'controls' && <Controls daemon={state.daemon} agents={state.agents} />}
+          {activeTab === 'overview' && <TownOverview agents={state.agents} sessions={state.sessions} config={state.config} />}
         </div>
       </div>
 

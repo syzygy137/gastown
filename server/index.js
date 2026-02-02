@@ -101,7 +101,8 @@ app.get('/api/activity', async (req, res) => {
 
 app.get('/api/sessions/all', async (req, res) => {
   try {
-    const sessions = await tmuxCaptureAll(20);
+    const lines = Math.min(parseInt(req.query.lines) || 30, 200);
+    const sessions = await tmuxCaptureAll(lines);
     res.json({ sessions });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { getIssues, getAgents, getMail, getEvents, getLabels, getIssueCounts, getConfig as getDbConfig, getRigs } from './db.js';
 import { tmuxListSessions, tmuxCapture, tmuxCaptureAll, gitInfo, daemonStatus, loadFormulas, loadConfig, runCommand } from './shell.js';
-import { addClient, startAll } from './poller.js';
+import { addClient, startAll, getIntervals, setIntervals } from './poller.js';
 
 const app = express();
 const server = createServer(app);
@@ -150,6 +150,18 @@ app.post('/api/mail/send', async (req, res) => {
     const result = await runCommand('gt', ['mail', 'send', to, '-s', subject, '-m', body]);
     res.json(result);
   } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+// --- Polling configuration ---
+
+app.get('/api/polling', (req, res) => {
+  res.json(getIntervals());
+});
+
+app.post('/api/polling', (req, res) => {
+  const { terminalMs, dbMs, gitMs } = req.body;
+  const changed = setIntervals({ terminalMs, dbMs, gitMs });
+  res.json({ ok: true, changed, intervals: getIntervals() });
 });
 
 // --- WebSocket ---

@@ -18,7 +18,10 @@ import { useToast } from './components/Toast.jsx';
 import LiveTerminals from './components/LiveTerminals.jsx';
 import AchievementToast, { useAchievements } from './components/AchievementToast.jsx';
 import ThemeToggle from './components/ThemeToggle.jsx';
+import SettingsPanel from './components/SettingsPanel.jsx';
+import ActivityFeed from './components/ActivityFeed.jsx';
 import useBackgroundTab from './hooks/useBackgroundTab.js';
+import useSettings from './hooks/useSettings.js';
 
 const initial = {
   connected: false,
@@ -85,6 +88,7 @@ const TABS = [
   { id: 'health', label: 'Health' },
   { id: 'controls', label: 'Controls' },
   { id: 'overview', label: 'Map' },
+  { id: 'settings', label: 'Settings' },
 ];
 
 // Convert agent path name (gastown/witness) to session name (gt-gastown-witness)
@@ -102,7 +106,13 @@ function agentPathToSession(name) {
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initial);
-  const [activeTab, setActiveTab] = useState('work');
+  const { settings, update: updateSetting, reset: resetSettings, DEFAULTS: settingsDefaults } = useSettings();
+  const [activeTab, setActiveTab] = useState(() => {
+    try {
+      const s = JSON.parse(localStorage.getItem('gastown-settings') || '{}');
+      return s.defaultTab || 'work';
+    } catch { return 'work'; }
+  });
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [fullscreenAgent, setFullscreenAgent] = useState(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -121,6 +131,14 @@ export default function App() {
   // Track previous state for change detection
   const prevRef = useRef({ mailIds: new Set(), agentStates: {}, issueStates: {} });
 
+  // Notify helper: fires toast (if enabled) and browser notification (if enabled)
+  const notify = useCallback((toast) => {
+    if (settings.toastsEnabled) addToast(toast);
+    if (settings.browserNotificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+      try { new Notification(toast.title, { body: toast.message, icon: '/favicon.ico' }); } catch { /* ignore */ }
+    }
+  }, [addToast, settings.toastsEnabled, settings.browserNotificationsEnabled]);
+
   // Fire toasts on state changes
   useEffect(() => {
     const prev = prevRef.current;
@@ -131,7 +149,7 @@ export default function App() {
       for (const m of state.mail) {
         const mid = m.id || `${m.from}-${m.timestamp}`;
         if (prevIds.size > 0 && !prevIds.has(mid)) {
-          addToast({
+          notify({
             variant: 'mail',
             title: `Mail from ${m.from || 'unknown'}`,
             message: m.subject || m.description?.slice(0, 60) || '',
@@ -150,7 +168,7 @@ export default function App() {
         const name = a.name || a.id;
         const st = a.state || a.status || 'idle';
         if (prevStates[name] && prevStates[name] !== st) {
-          addToast({
+          notify({
             variant: 'state',
             title: `${name} \u2192 ${st}`,
             message: a.hook || a.bead || '',
@@ -169,7 +187,7 @@ export default function App() {
         const iid = iss.id || iss.key;
         const st = (iss.state || iss.status || '').toLowerCase();
         if (prevIssues[iid] && prevIssues[iid] !== st && (st === 'closed' || st === 'done')) {
-          addToast({
+          notify({
             variant: 'success',
             title: 'Work completed',
             message: iss.title || iss.subject || iid,
@@ -180,7 +198,7 @@ export default function App() {
       }
       prev.issueStates = prevIssues;
     }
-  }, [state.mail, state.agents, state.issues, addToast]);
+  }, [state.mail, state.agents, state.issues, notify]);
 
   useEffect(() => {
     checkAchievements(state);
@@ -363,7 +381,7 @@ export default function App() {
           {'\u2315'} Search
           <kbd className="cmd-palette-kbd">{'\u2318'}K</kbd>
         </button>
-        <ThemeToggle />
+        <ThemeToggle theme={settings.theme} onToggle={t => updateSetting('theme', t)} />
         <div className="conn-status">
           <span className={`conn-dot ${state.connected ? 'connected' : 'disconnected'}`} />
           {state.connected ? 'Live' : 'Reconnecting...'}
@@ -385,20 +403,32 @@ export default function App() {
         </div>
       )}
 
-      {/* Primary view: live terminal grid */}
-      <div className={`live-terminals-area ${terminalsCollapsed ? 'panel-collapsed' : ''}`}>
-        <button
-          className="panel-collapse-toggle"
-          onClick={() => setTerminalsCollapsed(c => !c)}
-          aria-label={terminalsCollapsed ? 'Expand terminals' : 'Collapse terminals'}
-        >
-          <span className="panel-collapse-label">Terminals</span>
-          <span className="panel-collapse-icon">{terminalsCollapsed ? '\u25BC' : '\u25B2'}</span>
-        </button>
-        {!terminalsCollapsed && (
-          <LiveTerminals agents={state.agents} onSelectAgent={setSelectedAgent} onFullscreenAgent={setFullscreenAgent} changedIds={changedIds} />
+      <div className="dashboard-body">
+        {/* Activity strip sidebar */}
+        {settings.showActivityStrip && (
+          <aside className="activity-strip">
+            <div className="activity-strip__header">Activity</div>
+            <ActivityFeed activity={state.activity} agents={state.agents} onSelectAgent={setSelectedAgent} />
+          </aside>
         )}
-      </div>
+
+        <div className="dashboard-main">
+          {/* Primary view: live terminal grid */}
+          {settings.showTerminals && (
+            <div className={`live-terminals-area ${terminalsCollapsed ? 'panel-collapsed' : ''}`}>
+              <button
+                className="panel-collapse-toggle"
+                onClick={() => setTerminalsCollapsed(c => !c)}
+                aria-label={terminalsCollapsed ? 'Expand terminals' : 'Collapse terminals'}
+              >
+                <span className="panel-collapse-label">Terminals</span>
+                <span className="panel-collapse-icon">{terminalsCollapsed ? '\u25BC' : '\u25B2'}</span>
+              </button>
+              {!terminalsCollapsed && (
+                <LiveTerminals agents={state.agents} onSelectAgent={setSelectedAgent} onFullscreenAgent={setFullscreenAgent} changedIds={changedIds} />
+              )}
+            </div>
+          )}
 
       {/* Bottom panel: tabbed detail views */}
       <div className={`dashboard-bottom ${bottomCollapsed ? 'panel-collapsed' : ''}`}>
@@ -474,8 +504,18 @@ export default function App() {
           )}
           {activeTab === 'controls' && <Controls daemon={state.daemon} agents={state.agents} />}
           {activeTab === 'overview' && <TownOverview agents={state.agents} sessions={state.sessions} config={state.config} />}
+          {activeTab === 'settings' && (
+            <SettingsPanel
+              settings={settings}
+              onUpdate={updateSetting}
+              onReset={resetSettings}
+              defaults={settingsDefaults}
+            />
+          )}
         </div>
       </div>
+        </div>{/* close dashboard-main */}
+      </div>{/* close dashboard-body */}
 
       {/* Agent detail modal */}
       {selectedAgent && !fullscreenAgent && (

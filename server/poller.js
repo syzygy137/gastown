@@ -44,7 +44,7 @@ export function startDbPoll() {
     } catch (e) {
       broadcast({ type: 'error', message: e.message });
     }
-  }, 2000);
+  }, intervals.dbMs);
 }
 
 // Tmux poll — every 5 seconds
@@ -68,7 +68,7 @@ export function startGitPoll() {
       const git = await gitInfo();
       broadcast({ type: 'git', ...git });
     } catch { /* ignore */ }
-  }, 30000);
+  }, intervals.gitMs);
 }
 
 // Daemon poll — every 10 seconds
@@ -144,7 +144,45 @@ export function startTerminalPoll() {
         broadcast({ type: 'terminals', sessions: updates });
       }
     } catch { /* ignore */ }
-  }, 1500);
+  }, intervals.terminalMs);
+}
+
+// Configurable intervals (can be updated at runtime)
+let intervals = {
+  terminalMs: 1500,
+  dbMs: 2000,
+  gitMs: 30000,
+};
+
+export function getIntervals() {
+  return { ...intervals };
+}
+
+export function setIntervals(newIntervals) {
+  let changed = false;
+  if (newIntervals.terminalMs != null && newIntervals.terminalMs !== intervals.terminalMs) {
+    intervals.terminalMs = Math.max(500, Math.min(5000, newIntervals.terminalMs));
+    changed = true;
+    clearInterval(terminalInterval);
+    terminalInterval = null;
+    lastTerminalHashes = {};
+    startTerminalPoll();
+  }
+  if (newIntervals.dbMs != null && newIntervals.dbMs !== intervals.dbMs) {
+    intervals.dbMs = Math.max(1000, Math.min(10000, newIntervals.dbMs));
+    changed = true;
+    clearInterval(dbInterval);
+    dbInterval = null;
+    startDbPoll();
+  }
+  if (newIntervals.gitMs != null && newIntervals.gitMs !== intervals.gitMs) {
+    intervals.gitMs = Math.max(10000, Math.min(60000, newIntervals.gitMs));
+    changed = true;
+    clearInterval(gitInterval);
+    gitInterval = null;
+    startGitPoll();
+  }
+  return changed;
 }
 
 export function startAll() {

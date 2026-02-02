@@ -8,15 +8,23 @@ function getInitialTheme() {
   return 'dark';
 }
 
-export default function ThemeToggle() {
-  const [theme, setTheme] = useState(getInitialTheme);
+export default function ThemeToggle({ theme: controlledTheme, onToggle }) {
+  const [localTheme, setLocalTheme] = useState(getInitialTheme);
+  const theme = controlledTheme || localTheme;
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem(STORAGE_KEY, theme);
   }, [theme]);
 
-  const toggle = () => setTheme(t => t === 'dark' ? 'light' : 'dark');
+  const toggle = () => {
+    const next = theme === 'dark' ? 'light' : 'dark';
+    if (onToggle) {
+      onToggle(next);
+    } else {
+      setLocalTheme(next);
+    }
+  };
 
   return (
     <button

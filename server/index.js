@@ -108,6 +108,17 @@ app.post('/api/cmd', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.post('/api/mail/send', async (req, res) => {
+  const { to, subject, body } = req.body;
+  if (!to || !subject || !body) {
+    return res.status(400).json({ error: 'to, subject, and body are required' });
+  }
+  try {
+    const result = await runCommand('gt', ['mail', 'send', to, '-s', subject, '-m', body]);
+    res.json(result);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 // --- WebSocket ---
 
 wss.on('connection', (ws) => {

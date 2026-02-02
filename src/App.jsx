@@ -135,7 +135,7 @@ export default function App() {
             <span className="badge badge-message">{state.mail.length}</span>
           </div>
           <div className="panel-body scroll-area">
-            <MailFeed mail={state.mail} />
+            <MailFeed mail={state.mail} agents={state.agents} />
           </div>
         </div>
         <div className="panel">

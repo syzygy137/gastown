@@ -395,20 +395,177 @@ body {
 .badge-convoy { background: #2a1744; color: var(--purple); }
 
 /* Mail feed */
+.mail-feed { display: flex; flex-direction: column; gap: 8px; }
+.mail-toolbar { display: flex; justify-content: flex-end; margin-bottom: 4px; }
 .mail-list { display: flex; flex-direction: column; gap: 6px; }
 
+.mail-compose-btn {
+  padding: 4px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  background: #1a3a5c;
+  color: var(--accent);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mail-compose-btn:hover { background: #1f4a72; }
+
+/* Thread grouping */
+.mail-thread { display: flex; flex-direction: column; gap: 2px; }
+.mail-thread-badge {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 2px 8px;
+  background: var(--bg-hover);
+  border-radius: 4px;
+  display: inline-block;
+  width: fit-content;
+  margin-bottom: 2px;
+}
+
+/* Mail item */
 .mail-item {
   padding: 8px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-left: 3px solid transparent;
+  border-radius: 4px;
   font-size: 12px;
   background: var(--bg);
-  transition: border-color 0.2s ease-out;
+  transition: border-color 0.15s, background 0.15s;
 }
-.mail-item:hover { border-color: var(--accent); }
+.mail-item:hover { background: var(--bg-hover); border-color: var(--accent); }
+.mail-item.mail-unread {
+  border-left-color: var(--cyan);
+  background: #0d1a1f;
+}
+.mail-item.mail-reply { margin-left: 24px; }
 
-.mail-item .mail-subject { font-weight: 500; color: var(--text-bright); }
-.mail-item .mail-meta { font-size: 10px; color: var(--text-dim); font-family: var(--font-mono); }
+.mail-item-row { display: flex; align-items: flex-start; gap: 8px; }
+
+/* Avatar */
+.mail-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: #000;
+  flex-shrink: 0;
+}
+
+.mail-item-content { flex: 1; min-width: 0; }
+
+.mail-subject { font-weight: 500; color: var(--text-bright); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mail-subject-unread { font-weight: 700; }
+
+.mail-meta {
+  font-size: 10px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.mail-from { color: var(--cyan); }
+.mail-arrow { color: var(--text-dim); font-size: 9px; }
+.mail-to { color: var(--accent); }
+.mail-time { margin-left: auto; white-space: nowrap; }
+
+/* Expandable description */
+.mail-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 4px;
+  padding-left: 32px;
+  max-height: 40px;
+  overflow: hidden;
+  transition: max-height 0.25s ease;
+}
+.mail-desc-expanded { max-height: 600px; }
+
+/* Compose form */
+.mail-compose {
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+.mail-compose-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+}
+.mail-compose-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+}
+.mail-compose-close:hover { color: var(--text-bright); }
+.mail-compose-field {
+  margin-bottom: 6px;
+}
+.mail-compose-field label {
+  display: block;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+.mail-compose-field select,
+.mail-compose-field input,
+.mail-compose-field textarea {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.mail-compose-field textarea {
+  font-family: var(--font-mono);
+  resize: vertical;
+}
+.mail-compose-field select:focus,
+.mail-compose-field input:focus,
+.mail-compose-field textarea:focus {
+  border-color: var(--accent);
+}
+.mail-compose-error {
+  font-size: 11px;
+  color: var(--red);
+  margin-bottom: 6px;
+}
+.mail-compose-send {
+  padding: 6px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #000;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+.mail-compose-send:hover { opacity: 0.9; }
+.mail-compose-send:disabled { opacity: 0.4; cursor: not-allowed; }
 
 /* Event timeline */
 .event-list { display: flex; flex-direction: column; gap: 4px; }

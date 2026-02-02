@@ -91,7 +91,7 @@ export default function App() {
 
       <div className="town-overview panel">
         <div className="panel-header">Town Overview</div>
-        <TownOverview agents={state.agents} sessions={state.sessions} />
+        <TownOverview agents={state.agents} sessions={state.sessions} config={state.config} />
       </div>
 
       <div className="controls panel">

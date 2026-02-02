@@ -585,18 +585,58 @@ body {
 /* SVG town overview */
 .town-svg text { fill: var(--text); font-size: 12px; }
 .town-svg .node { cursor: pointer; }
-.town-svg .node rect { fill: var(--bg-card); stroke: var(--border); stroke-width: 1.5; rx: 6; }
-.town-svg .node:hover rect { stroke: var(--accent); }
+.town-svg .node-shape { fill: var(--bg-card); stroke: var(--border); stroke-width: 1.5; }
+.town-svg .node:hover .node-shape { stroke: var(--accent); }
 .town-svg .edge { stroke: var(--border); stroke-width: 1; fill: none; }
 .town-svg .node-label { text-anchor: middle; dominant-baseline: central; font-size: 11px; fill: var(--text-bright); font-weight: 600; }
 .town-svg .node-status { text-anchor: middle; dominant-baseline: central; font-size: 9px; fill: var(--text-dim); }
+
+/* Rig group styling */
+.town-svg .rig-group-rect {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-dasharray: 6 3;
+  rx: 8;
+  opacity: 0.6;
+}
+.town-svg .rig-group-label {
+  text-anchor: middle;
+  font-size: 10px;
+  fill: var(--text-dim);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Tooltip */
+.town-svg .tooltip-bg { fill: var(--bg-hover); stroke: var(--border); stroke-width: 1; }
+.town-svg .tooltip-label { font-size: 11px; fill: var(--text-bright); font-weight: 600; }
+.town-svg .tooltip-status { font-size: 9px; }
+.town-svg .tooltip-active { fill: var(--green); }
+.town-svg .tooltip-idle { fill: var(--text-dim); }
+
+/* Mail flow dot */
+@keyframes mail-fade {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.town-svg .mail-dot {
+  fill: var(--orange);
+  filter: url(#glow);
+  animation: mail-fade 1.2s ease-out forwards;
+}
 
 /* Pulse animation for active nodes */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
 }
-.node-active rect { stroke: var(--green); animation: pulse 2s ease-in-out infinite; }
+.node-active .node-shape, .node-active .shape-active {
+  stroke: var(--green);
+  animation: pulse 2s ease-in-out infinite;
+}
 
 /* Empty state */
 .empty {

@@ -560,6 +560,48 @@ body {
   font-family: var(--font-mono);
 }
 
+.issue-card { cursor: pointer; }
+
+.issue-card-expanded {
+  border-color: var(--accent);
+  box-shadow: 1px 2px 8px rgba(0,0,0,0.3), 0 0 6px rgba(193,127,36,0.15);
+}
+
+.issue-detail {
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+}
+
+.issue-detail-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+
+.issue-detail-label {
+  color: var(--text-dim);
+  min-width: 60px;
+  flex-shrink: 0;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.issue-detail-value {
+  color: var(--text);
+  word-break: break-word;
+}
+
+.issue-detail-desc .issue-detail-value {
+  white-space: pre-wrap;
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
 /* ── Status Badges (stamped metal tags) ── */
 .badge {
   display: inline-block;

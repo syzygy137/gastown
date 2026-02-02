@@ -190,6 +190,7 @@ export function getSnapshot() {
     mail: getMail(),
     events: getEvents(),
     labels: getLabels(),
+    dependencies: getDependencies(),
     counts: getIssueCounts(),
   };
 }

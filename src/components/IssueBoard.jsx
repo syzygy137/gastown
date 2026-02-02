@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import StatusBadge from './StatusBadge.jsx';
 
 const COLUMNS = [
@@ -34,8 +34,17 @@ function timeAgo(dateStr) {
   return `${days}d ago`;
 }
 
-export default function IssueBoard({ issues }) {
+export default function IssueBoard({ issues, dependencies = [] }) {
   const [expanded, setExpanded] = useState(new Set());
+
+  const depsMap = useMemo(() => {
+    const m = {};
+    for (const dep of dependencies) {
+      if (!m[dep.issue_id]) m[dep.issue_id] = [];
+      m[dep.issue_id].push(dep.depends_on || dep.dependency_id || dep.target_id);
+    }
+    return m;
+  }, [dependencies]);
 
   const toggle = (id) => {
     setExpanded(prev => {
@@ -67,6 +76,7 @@ export default function IssueBoard({ issues }) {
           {grouped[col.key].map(issue => {
             const isExpanded = expanded.has(issue.id);
             const pClass = PRIORITY_CLASSES[issue.priority] || '';
+            const deps = depsMap[issue.id];
             return (
               <div
                 key={issue.id}
@@ -107,6 +117,12 @@ export default function IssueBoard({ issues }) {
                         <div className="issue-detail-row">
                           <span className="issue-detail-label">Assignee</span>
                           <span className="issue-detail-value">{issue.assignee}</span>
+                        </div>
+                      )}
+                      {deps && deps.length > 0 && (
+                        <div className="issue-detail-row">
+                          <span className="issue-detail-label">Deps</span>
+                          <span className="issue-detail-value">{deps.join(', ')}</span>
                         </div>
                       )}
                       {issue.created_at && (

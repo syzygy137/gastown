@@ -19,6 +19,7 @@ const initial = {
   mail: [],
   events: [],
   labels: [],
+  dependencies: [],
   counts: [],
   sessions: [],
   activity: [],
@@ -40,6 +41,7 @@ function reducer(state, action) {
       mail: action.mail || state.mail,
       events: action.events || state.events,
       labels: action.labels || state.labels,
+      dependencies: action.dependencies || state.dependencies,
       counts: action.counts || state.counts,
       sessions: action.sessions || state.sessions,
     };
@@ -241,7 +243,7 @@ export default function App() {
           </div>
           <div className="tab-content">
             {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
-            {activeTab === 'issues' && <IssueBoard issues={state.issues} />}
+            {activeTab === 'issues' && <IssueBoard issues={state.issues} dependencies={state.dependencies} />}
             {activeTab === 'mail' && <MailFeed mail={state.mail} agents={state.agents} />}
             {activeTab === 'events' && <EventTimeline events={state.events} />}
             {activeTab === 'formulas' && <FormulaBrowser formulas={state.formulas} />}

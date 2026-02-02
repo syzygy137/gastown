@@ -10,6 +10,7 @@ import Controls from './components/Controls.jsx';
 import MetricsBar from './components/MetricsBar.jsx';
 import ActivityFeed from './components/ActivityFeed.jsx';
 import AgentDetail from './components/AgentDetail.jsx';
+import CommandPalette from './components/CommandPalette.jsx';
 
 const initial = {
   connected: false,
@@ -64,6 +65,7 @@ export default function App() {
   const [state, dispatch] = useReducer(reducer, initial);
   const [activeTab, setActiveTab] = useState('sessions');
   const [selectedAgent, setSelectedAgent] = useState(null);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const wsRef = useRef(null);
   const retryRef = useRef(null);
 
@@ -94,6 +96,60 @@ export default function App() {
     };
   }, [connect]);
 
+  // Global keyboard shortcuts
+  useEffect(() => {
+    function handleGlobalKey(e) {
+      const tag = e.target.tagName;
+      const isInput = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable;
+
+      // Ctrl+K / Cmd+K — always opens palette
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setPaletteOpen(prev => !prev);
+        return;
+      }
+
+      // Escape — close palette or agent detail
+      if (e.key === 'Escape') {
+        if (paletteOpen) { setPaletteOpen(false); return; }
+        if (selectedAgent) { setSelectedAgent(null); return; }
+        return;
+      }
+
+      // Skip remaining shortcuts when typing in inputs or palette is open
+      if (isInput || paletteOpen) return;
+
+      // 1-6 — switch tabs
+      const num = parseInt(e.key, 10);
+      if (num >= 1 && num <= 6) {
+        e.preventDefault();
+        setActiveTab(TABS[num - 1].id);
+        return;
+      }
+
+      // / — focus command input in Controls tab
+      if (e.key === '/') {
+        e.preventDefault();
+        setActiveTab('controls');
+        setTimeout(() => {
+          const cmdInput = document.querySelector('.cmd-input');
+          if (cmdInput) cmdInput.focus();
+        }, 100);
+        return;
+      }
+
+      // r — refresh
+      if (e.key === 'r') {
+        e.preventDefault();
+        window.location.reload();
+        return;
+      }
+    }
+
+    window.addEventListener('keydown', handleGlobalKey);
+    return () => window.removeEventListener('keydown', handleGlobalKey);
+  }, [paletteOpen, selectedAgent]);
+
   const tabBadge = (id) => {
     switch (id) {
       case 'sessions': return state.sessions.length || null;
@@ -122,6 +178,10 @@ export default function App() {
           mail={state.mail}
           daemon={state.daemon}
         />
+        <button className="palette-trigger" onClick={() => setPaletteOpen(true)}>
+          {'\u2315'} Search
+          <kbd className="cmd-palette-kbd">{'\u2318'}K</kbd>
+        </button>
         <div className="conn-status">
           <span className={`conn-dot ${state.connected ? 'connected' : 'disconnected'}`} />
           {state.connected ? 'Live' : 'Reconnecting...'}
@@ -157,13 +217,14 @@ export default function App() {
 
         <div className="main-right">
           <div className="tab-bar">
-            {TABS.map(t => (
+            {TABS.map((t, idx) => (
               <button
                 key={t.id}
                 className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
                 onClick={() => setActiveTab(t.id)}
               >
                 {t.label}
+                <span className="tab-shortcut">{idx + 1}</span>
                 {tabBadge(t.id) != null && (
                   <span className="tab-badge">{tabBadge(t.id)}</span>
                 )}
@@ -189,6 +250,19 @@ export default function App() {
           onClose={() => setSelectedAgent(null)}
         />
       )}
+
+      {/* Command palette */}
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        agents={state.agents}
+        issues={state.issues}
+        onSwitchTab={setActiveTab}
+        onSelectAgent={(agent) => {
+          const session = agent.title || agent.id;
+          setSelectedAgent(session);
+        }}
+      />
     </div>
   );
 }

@@ -2116,6 +2116,72 @@ body {
   text-overflow: ellipsis;
 }
 
+/* ── Toast Notifications (slide-in brass alerts) ── */
+.toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  max-width: 360px;
+}
+
+.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-accent);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5), var(--brass-glow);
+  cursor: pointer;
+  pointer-events: auto;
+  animation: toast-slide-in 0.3s ease-out;
+  transition: opacity 0.3s, transform 0.3s;
+  border-left: 3px solid var(--accent);
+}
+.toast:hover {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.6), 0 0 10px rgba(193,127,36,0.25);
+}
+
+.toast--exit {
+  animation: toast-slide-out 0.3s ease-in forwards;
+}
+
+.toast--mail   { border-left-color: var(--orange); }
+.toast--state  { border-left-color: var(--cyan); }
+.toast--success { border-left-color: var(--green); }
+.toast--error  { border-left-color: var(--red); }
+.toast--info   { border-left-color: var(--yellow); }
+
+.toast__icon {
+  font-size: 16px;
+  line-height: 1;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+.toast--mail .toast__icon   { color: var(--orange); }
+.toast--state .toast__icon  { color: var(--cyan); }
+.toast--success .toast__icon { color: var(--green); }
+.toast--error .toast__icon  { color: var(--red); }
+.toast--info .toast__icon   { color: var(--yellow); }
+
+.toast__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast__title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-bright);
+  letter-spacing: 0.3px;
+}
+
 .cmd-palette-item-desc {
   font-size: 11px;
   color: var(--text-dim);
@@ -2206,4 +2272,36 @@ body {
   border-color: var(--border-accent);
   color: var(--text);
   box-shadow: var(--lamp-glow);
+}
+
+.toast__message {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+}
+
+@keyframes toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toast-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }

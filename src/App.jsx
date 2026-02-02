@@ -12,6 +12,7 @@ import ActivityFeed from './components/ActivityFeed.jsx';
 import AgentDetail from './components/AgentDetail.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
 import WorkTracker from './components/WorkTracker.jsx';
+import { useToast } from './components/Toast.jsx';
 
 const initial = {
   connected: false,
@@ -80,6 +81,71 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const wsRef = useRef(null);
   const retryRef = useRef(null);
+  const addToast = useToast();
+
+  // Track previous state for change detection
+  const prevRef = useRef({ mailIds: new Set(), agentStates: {}, issueStates: {} });
+
+  // Fire toasts on state changes
+  useEffect(() => {
+    const prev = prevRef.current;
+
+    // New mail detection
+    if (state.mail.length > 0) {
+      const prevIds = prev.mailIds;
+      for (const m of state.mail) {
+        const mid = m.id || `${m.from}-${m.timestamp}`;
+        if (prevIds.size > 0 && !prevIds.has(mid)) {
+          addToast({
+            variant: 'mail',
+            title: `Mail from ${m.from || 'unknown'}`,
+            message: m.subject || m.description?.slice(0, 60) || '',
+            duration: 5000,
+          });
+          break; // one toast per batch
+        }
+      }
+      prev.mailIds = new Set(state.mail.map(m => m.id || `${m.from}-${m.timestamp}`));
+    }
+
+    // Agent state changes
+    if (state.agents.length > 0) {
+      const prevStates = prev.agentStates;
+      for (const a of state.agents) {
+        const name = a.name || a.id;
+        const st = a.state || a.status || 'idle';
+        if (prevStates[name] && prevStates[name] !== st) {
+          addToast({
+            variant: 'state',
+            title: `${name} \u2192 ${st}`,
+            message: a.hook || a.bead || '',
+            duration: 4000,
+          });
+        }
+        prevStates[name] = st;
+      }
+      prev.agentStates = prevStates;
+    }
+
+    // Issue completion (closed/done)
+    if (state.issues.length > 0) {
+      const prevIssues = prev.issueStates;
+      for (const iss of state.issues) {
+        const iid = iss.id || iss.key;
+        const st = (iss.state || iss.status || '').toLowerCase();
+        if (prevIssues[iid] && prevIssues[iid] !== st && (st === 'closed' || st === 'done')) {
+          addToast({
+            variant: 'success',
+            title: 'Work completed',
+            message: iss.title || iss.subject || iid,
+            duration: 5000,
+          });
+        }
+        prevIssues[iid] = st;
+      }
+      prev.issueStates = prevIssues;
+    }
+  }, [state.mail, state.agents, state.issues, addToast]);
 
   const connect = useCallback(() => {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';

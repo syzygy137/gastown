@@ -14,10 +14,11 @@ function fuzzyMatch(query, text) {
 const TAB_ITEMS = [
   { id: 'tab-sessions', type: 'tab', name: 'Sessions', description: 'Tmux session viewer', icon: '\u2395', shortcut: '1', tabId: 'sessions' },
   { id: 'tab-issues', type: 'tab', name: 'Issues', description: 'Issue board (kanban)', icon: '\u2691', shortcut: '2', tabId: 'issues' },
-  { id: 'tab-mail', type: 'tab', name: 'Mail', description: 'Agent messaging feed', icon: '\u2709', shortcut: '3', tabId: 'mail' },
-  { id: 'tab-events', type: 'tab', name: 'Events', description: 'Event timeline', icon: '\u25C9', shortcut: '4', tabId: 'events' },
-  { id: 'tab-formulas', type: 'tab', name: 'Formulas', description: 'Formula browser', icon: '\u2697', shortcut: '5', tabId: 'formulas' },
-  { id: 'tab-controls', type: 'tab', name: 'Controls', description: 'Command & control panel', icon: '\u2699', shortcut: '6', tabId: 'controls' },
+  { id: 'tab-merge-queue', type: 'tab', name: 'Merge Queue', description: 'MR status, refinery progress & merge history', icon: '\u2A4E', shortcut: '3', tabId: 'merge-queue' },
+  { id: 'tab-mail', type: 'tab', name: 'Mail', description: 'Agent messaging feed', icon: '\u2709', shortcut: '4', tabId: 'mail' },
+  { id: 'tab-events', type: 'tab', name: 'Events', description: 'Event timeline', icon: '\u25C9', shortcut: '5', tabId: 'events' },
+  { id: 'tab-formulas', type: 'tab', name: 'Formulas', description: 'Formula browser', icon: '\u2697', shortcut: '6', tabId: 'formulas' },
+  { id: 'tab-controls', type: 'tab', name: 'Controls', description: 'Command & control panel', icon: '\u2699', shortcut: '7', tabId: 'controls' },
 ];
 
 const COMMAND_ITEMS = [

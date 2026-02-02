@@ -7,6 +7,7 @@ import EventTimeline from './components/EventTimeline.jsx';
 import FormulaBrowser from './components/FormulaBrowser.jsx';
 import TmuxViewer from './components/TmuxViewer.jsx';
 import Controls from './components/Controls.jsx';
+import MergeQueue from './components/MergeQueue.jsx';
 import MetricsBar from './components/MetricsBar.jsx';
 import ActivityFeed from './components/ActivityFeed.jsx';
 import AgentDetail from './components/AgentDetail.jsx';
@@ -68,6 +69,7 @@ const TABS = [
   { id: 'work', label: 'Work' },
   { id: 'sessions', label: 'Sessions' },
   { id: 'issues', label: 'Issues' },
+  { id: 'merge-queue', label: 'Merge Queue' },
   { id: 'mail', label: 'Mail' },
   { id: 'events', label: 'Events' },
   { id: 'formulas', label: 'Formulas' },
@@ -197,9 +199,9 @@ export default function App() {
       // Skip remaining shortcuts when typing in inputs or palette is open
       if (isInput || paletteOpen) return;
 
-      // 1-6 — switch tabs
+      // 1-7 — switch tabs
       const num = parseInt(e.key, 10);
-      if (num >= 1 && num <= 6) {
+      if (num >= 1 && num <= TABS.length) {
         e.preventDefault();
         setActiveTab(TABS[num - 1].id);
         return;
@@ -236,6 +238,13 @@ export default function App() {
       }
       case 'sessions': return state.sessions.length || null;
       case 'issues': return state.issues.length || null;
+      case 'merge-queue': {
+        const active = state.issues.filter(i =>
+          (i.issue_type === 'merge-request' || i.issue_type === 'merge_request') &&
+          i.status !== 'closed' && i.status !== 'done'
+        ).length;
+        return active || null;
+      }
       case 'mail': return state.mail.length || null;
       case 'events': return state.events.length || null;
       case 'formulas': return state.formulas.length || null;
@@ -317,6 +326,7 @@ export default function App() {
             {activeTab === 'work' && <WorkTracker issues={state.issues} agents={state.agents} />}
             {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
             {activeTab === 'issues' && <IssueBoard issues={state.issues} dependencies={state.dependencies} />}
+            {activeTab === 'merge-queue' && <MergeQueue issues={state.issues} events={state.events} />}
             {activeTab === 'mail' && <MailFeed mail={state.mail} agents={state.agents} />}
             {activeTab === 'events' && <EventTimeline events={state.events} />}
             {activeTab === 'formulas' && <FormulaBrowser formulas={state.formulas} />}

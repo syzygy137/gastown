@@ -1,7 +1,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
-import { getIssues, getAgents, getMail, getEvents, getLabels, getIssueCounts, getConfig as getDbConfig } from './db.js';
+import { getIssues, getAgents, getMail, getEvents, getLabels, getIssueCounts, getConfig as getDbConfig, getRigs } from './db.js';
 import { tmuxListSessions, tmuxCapture, gitInfo, daemonStatus, loadFormulas, loadConfig, runCommand } from './shell.js';
 import { addClient, startAll } from './poller.js';
 
@@ -82,6 +82,11 @@ app.get('/api/sessions', async (req, res) => {
 
 app.get('/api/sessions/:name', async (req, res) => {
   try { res.json({ name: req.params.name, output: await tmuxCapture(req.params.name) }); }
+  catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/rigs', (req, res) => {
+  try { res.json(getRigs()); }
   catch (e) { res.status(500).json({ error: e.message }); }
 });
 

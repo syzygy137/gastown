@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useRef, useCallback } from 'react';
+import React, { useReducer, useEffect, useRef, useCallback, useState } from 'react';
 import TownOverview from './components/TownOverview.jsx';
 import AgentCards from './components/AgentCards.jsx';
 import MailFeed from './components/MailFeed.jsx';
@@ -47,8 +47,18 @@ function reducer(state, action) {
   }
 }
 
+const TABS = [
+  { id: 'sessions', label: 'Sessions' },
+  { id: 'issues', label: 'Issues' },
+  { id: 'mail', label: 'Mail' },
+  { id: 'events', label: 'Events' },
+  { id: 'formulas', label: 'Formulas' },
+  { id: 'controls', label: 'Controls' },
+];
+
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initial);
+  const [activeTab, setActiveTab] = useState('sessions');
   const wsRef = useRef(null);
   const retryRef = useRef(null);
 
@@ -71,7 +81,6 @@ export default function App() {
 
   useEffect(() => {
     connect();
-    // Fetch formulas and config (one-time)
     fetch('/api/formulas').then(r => r.json()).then(f => dispatch({ type: 'formulas', formulas: f })).catch(() => {});
     fetch('/api/config').then(r => r.json()).then(c => dispatch({ type: 'config', config: c })).catch(() => {});
     return () => {
@@ -80,88 +89,76 @@ export default function App() {
     };
   }, [connect]);
 
+  const tabBadge = (id) => {
+    switch (id) {
+      case 'sessions': return state.sessions.length || null;
+      case 'issues': return state.issues.length || null;
+      case 'mail': return state.mail.length || null;
+      case 'events': return state.events.length || null;
+      case 'formulas': return state.formulas.length || null;
+      default: return null;
+    }
+  };
+
   return (
-    <div className="dashboard">
+    <div className="dashboard-viewport">
+      {/* Top bar: header + metrics */}
       <header className="dashboard-header">
-        <h1>Gas Town — {state.config?.town?.name || 'gt'}</h1>
+        <h1>⚙ GAS TOWN</h1>
+        <MetricsBar
+          agents={state.agents}
+          issues={state.issues}
+          counts={state.counts}
+          mail={state.mail}
+          daemon={state.daemon}
+        />
         <div className="conn-status">
           <span className={`conn-dot ${state.connected ? 'connected' : 'disconnected'}`} />
           {state.connected ? 'Live' : 'Reconnecting...'}
         </div>
       </header>
 
-      <MetricsBar
-        agents={state.agents}
-        issues={state.issues}
-        counts={state.counts}
-        mail={state.mail}
-        daemon={state.daemon}
-      />
+      {/* Main area: left=overview+agents, right=tabbed detail */}
+      <div className="dashboard-main">
+        <div className="main-left">
+          <div className="panel overview-panel">
+            <div className="panel-header">Town Overview</div>
+            <TownOverview agents={state.agents} sessions={state.sessions} config={state.config} />
+          </div>
+          <div className="panel agents-panel">
+            <div className="panel-header">
+              Agents
+              <span className="badge badge-molecule">{state.agents.length}</span>
+            </div>
+            <div className="panel-body agents-scroll">
+              <AgentCards agents={state.agents} sessions={state.sessions} />
+            </div>
+          </div>
+        </div>
 
-      <div className="town-overview panel">
-        <div className="panel-header">Town Overview</div>
-        <TownOverview agents={state.agents} sessions={state.sessions} config={state.config} />
-      </div>
-
-      <div className="controls panel">
-        <div className="panel-header">Controls</div>
-        <div className="panel-body">
-          <Controls daemon={state.daemon} agents={state.agents} />
-        </div>
-      </div>
-
-      <div className="row-2">
-        <div className="panel">
-          <div className="panel-header">
-            Agents
-            <span className="badge badge-molecule">{state.agents.length}</span>
+        <div className="main-right">
+          <div className="tab-bar">
+            {TABS.map(t => (
+              <button
+                key={t.id}
+                className={`tab-btn ${activeTab === t.id ? 'active' : ''}`}
+                onClick={() => setActiveTab(t.id)}
+              >
+                {t.label}
+                {tabBadge(t.id) != null && (
+                  <span className="tab-badge">{tabBadge(t.id)}</span>
+                )}
+              </button>
+            ))}
           </div>
-          <div className="panel-body scroll-area">
-            <AgentCards agents={state.agents} sessions={state.sessions} />
+          <div className="tab-content">
+            {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
+            {activeTab === 'issues' && <IssueBoard issues={state.issues} />}
+            {activeTab === 'mail' && <MailFeed mail={state.mail} agents={state.agents} />}
+            {activeTab === 'events' && <EventTimeline events={state.events} />}
+            {activeTab === 'formulas' && <FormulaBrowser formulas={state.formulas} />}
+            {activeTab === 'controls' && <Controls daemon={state.daemon} agents={state.agents} />}
           </div>
-        </div>
-        <div className="panel">
-          <div className="panel-header">Issue Board</div>
-          <div className="panel-body">
-            <IssueBoard issues={state.issues} />
-          </div>
-        </div>
-      </div>
-
-      <div className="row-3">
-        <div className="panel">
-          <div className="panel-header">
-            Mail
-            <span className="badge badge-message">{state.mail.length}</span>
-          </div>
-          <div className="panel-body scroll-area">
-            <MailFeed mail={state.mail} agents={state.agents} />
-          </div>
-        </div>
-        <div className="panel">
-          <div className="panel-header">
-            Events
-            <span className="badge badge-idle">{state.events.length}</span>
-          </div>
-          <div className="panel-body scroll-area">
-            <EventTimeline events={state.events} />
-          </div>
-        </div>
-      </div>
-
-      <div className="row-4">
-        <div className="panel">
-          <div className="panel-header">
-            Formulas
-            <span className="badge badge-idle">{state.formulas.length}</span>
-          </div>
-          <div className="panel-body scroll-area">
-            <FormulaBrowser formulas={state.formulas} />
-          </div>
-        </div>
-        <div className="panel">
-          <div className="panel-header">Tmux Sessions</div>
-          <TmuxViewer sessions={state.sessions} />
         </div>
       </div>
     </div>

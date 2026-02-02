@@ -3042,3 +3042,335 @@ body {
   border-color: var(--border-accent);
   box-shadow: var(--brass-glow), 0 0 0 1px var(--border-accent);
 }
+
+/* ── Agent Avatars (animated role icons) ── */
+.agent-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  flex-shrink: 0;
+  transition: transform 0.2s ease-out, box-shadow 0.2s ease-out;
+  position: relative;
+  overflow: visible;
+}
+.agent-avatar--active {
+  box-shadow: 0 0 8px currentColor;
+}
+.agent-avatar:hover {
+  transform: scale(1.15);
+}
+
+.avatar-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.avatar-svg--active {
+  filter: drop-shadow(0 0 3px currentColor);
+}
+
+/* Avatar animation: gem sparkle */
+.avatar-gem {
+  animation: gem-sparkle 3s ease-in-out infinite;
+}
+.avatar-gem--center {
+  animation-delay: 0.5s;
+}
+@keyframes gem-sparkle {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; filter: brightness(1.4); }
+}
+
+/* Avatar animation: pulse ring */
+.avatar-pulse-ring {
+  animation: avatar-pulse-ring 2s ease-out infinite;
+  transform-origin: center;
+}
+@keyframes avatar-pulse-ring {
+  0% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+/* Avatar animation: eye scan */
+.avatar-eye-scan {
+  animation: eye-scan 4s ease-in-out infinite;
+  transform-origin: center;
+}
+@keyframes eye-scan {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(2px); }
+  75% { transform: translateX(-2px); }
+}
+
+/* Avatar animation: radar sweep */
+.avatar-radar-sweep {
+  animation: radar-sweep 3s linear infinite;
+  transform-origin: 16px 16px;
+}
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Avatar animation: radar rings */
+.avatar-radar-ring {
+  animation: radar-ring-pulse 2s ease-out infinite;
+}
+.avatar-radar-ring--outer {
+  animation-delay: 0.5s;
+}
+@keyframes radar-ring-pulse {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.6; }
+}
+
+/* Avatar animation: flame flicker */
+.avatar-flame {
+  animation: flame-dance 0.8s ease-in-out infinite alternate;
+  transform-origin: center bottom;
+}
+@keyframes flame-dance {
+  0% { transform: scaleY(0.9) scaleX(1); }
+  50% { transform: scaleY(1.1) scaleX(0.95); }
+  100% { transform: scaleY(1) scaleX(1.05); }
+}
+
+/* Avatar animation: sparks */
+.avatar-spark {
+  animation: spark-fly 1.2s ease-out infinite;
+}
+.avatar-spark--delay {
+  animation-delay: 0.6s;
+}
+@keyframes spark-fly {
+  0% { opacity: 1; transform: translateY(0); }
+  50% { opacity: 1; transform: translateY(-3px) translateX(1px); }
+  100% { opacity: 0; transform: translateY(-6px) translateX(2px); }
+}
+
+/* Avatar animation: cog spin (slow) */
+.avatar-cog-spin {
+  animation: cog-spin 8s linear infinite;
+  transform-origin: center;
+}
+@keyframes cog-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Avatar animation: lightning bolt flash */
+.avatar-bolt-flash {
+  animation: bolt-flash 2s ease-in-out infinite;
+}
+@keyframes bolt-flash {
+  0%, 90%, 100% { opacity: 0.8; }
+  93% { opacity: 0.3; }
+  95% { opacity: 1; filter: brightness(1.5); }
+  97% { opacity: 0.5; }
+}
+
+/* Agent card header layout with avatar */
+.agent-card-v2__header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+
+/* ── XP Bar (experience gauge) ── */
+.xp-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.xp-bar--compact {
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.xp-bar__header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+}
+
+.xp-bar__level-badge {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 4px;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1.2;
+  flex-shrink: 0;
+  text-shadow: 0 0 6px currentColor;
+}
+
+.xp-bar__title {
+  font-weight: 600;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.xp-bar__xp {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--text-dim);
+  margin-left: auto;
+}
+
+.xp-bar__track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-card);
+  border: 1px solid rgba(74,61,46,0.4);
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+}
+
+.xp-bar__fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease-out;
+  box-shadow: 0 0 4px currentColor;
+  position: relative;
+}
+.xp-bar__fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3));
+  border-radius: 0 2px 2px 0;
+  animation: xp-shimmer 2s ease-in-out infinite;
+}
+@keyframes xp-shimmer {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 0.8; }
+}
+
+/* ── Achievement Toasts ── */
+.achievement-toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.achievement-toast {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-card) 100%);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5), 0 0 16px rgba(193,127,36,0.3), inset 0 1px 0 rgba(193,127,36,0.2);
+  min-width: 280px;
+  max-width: 360px;
+  pointer-events: auto;
+  cursor: pointer;
+  animation: toast-enter 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  overflow: hidden;
+}
+.achievement-toast--exit {
+  animation: toast-exit 0.5s ease-in forwards;
+}
+
+@keyframes toast-enter {
+  from {
+    transform: translateX(100%) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+@keyframes toast-exit {
+  from {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(120%) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.achievement-toast__sparkle {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    45deg,
+    transparent 0%,
+    transparent 40%,
+    rgba(193,127,36,0.1) 45%,
+    rgba(193,127,36,0.2) 50%,
+    rgba(193,127,36,0.1) 55%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  animation: sparkle-sweep 1.5s ease-in-out;
+  pointer-events: none;
+}
+@keyframes sparkle-sweep {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+.achievement-toast__icon {
+  font-size: 28px;
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(193,127,36,0.5));
+  animation: icon-bounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+}
+@keyframes icon-bounce {
+  from { transform: scale(0) rotate(-20deg); }
+  to { transform: scale(1) rotate(0deg); }
+}
+
+.achievement-toast__body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.achievement-toast__label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.achievement-toast__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-bright);
+  text-shadow: 0 1px 4px rgba(193,127,36,0.3);
+}
+
+.achievement-toast__desc {
+  font-size: 11px;
+  color: var(--text-dim);
+}

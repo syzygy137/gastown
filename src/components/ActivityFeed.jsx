@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useMemo } from 'react';
 import StatusBadge from './StatusBadge.jsx';
+import AgentAvatar from './AgentAvatar.jsx';
 
 function relativeTime(isoString) {
   if (!isoString) return '';
@@ -114,6 +115,7 @@ export default function ActivityFeed({ activity = [], agents = [], onSelectAgent
             onClick={() => onSelectAgent?.(a.session)}
           >
             <div className="activity-row__left">
+              <AgentAvatar role={a.role} active={isActive} size={20} />
               <div className="activity-row__name">{a.displayName}</div>
               <div className="activity-row__badges">
                 <StatusBadge value={a.role} />

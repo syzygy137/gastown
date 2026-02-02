@@ -14,6 +14,7 @@ import CommandPalette from './components/CommandPalette.jsx';
 import WorkTracker from './components/WorkTracker.jsx';
 import { useToast } from './components/Toast.jsx';
 import LiveTerminals from './components/LiveTerminals.jsx';
+import AchievementToast, { useAchievements } from './components/AchievementToast.jsx';
 
 const initial = {
   connected: false,
@@ -104,6 +105,7 @@ export default function App() {
   const wsRef = useRef(null);
   const retryRef = useRef(null);
   const addToast = useToast();
+  const { toasts, checkAchievements, dismissToast } = useAchievements();
 
   // Track previous state for change detection
   const prevRef = useRef({ mailIds: new Set(), agentStates: {}, issueStates: {} });
@@ -168,6 +170,10 @@ export default function App() {
       prev.issueStates = prevIssues;
     }
   }, [state.mail, state.agents, state.issues, addToast]);
+
+  useEffect(() => {
+    checkAchievements(state);
+  }, [state.issues, state.agents, state.mail, checkAchievements]);
 
   const connect = useCallback(() => {
     const proto = location.protocol === 'https:' ? 'wss' : 'ws';
@@ -397,7 +403,7 @@ export default function App() {
               onDrillAgent={drillAgent}
             />
           )}
-          {activeTab === 'agents' && <AgentCards agents={state.agents} polecats={state.polecats} sessions={state.sessions} onSelectAgent={setSelectedAgent} />}
+          {activeTab === 'agents' && <AgentCards agents={state.agents} polecats={state.polecats} sessions={state.sessions} issues={state.issues} onSelectAgent={setSelectedAgent} />}
           {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
           {activeTab === 'issues' && (
             <IssueBoard
@@ -448,6 +454,9 @@ export default function App() {
           setSelectedAgent(session);
         }}
       />
+
+      {/* Achievement toasts */}
+      <AchievementToast toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

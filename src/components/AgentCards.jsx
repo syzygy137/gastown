@@ -1,6 +1,8 @@
 import React, { useMemo } from 'react';
 import StatusBadge from './StatusBadge.jsx';
 import Tooltip from './Tooltip.jsx';
+import AgentAvatar from './AgentAvatar.jsx';
+import XpBar, { calculateAgentXp } from './XpBar.jsx';
 
 function parseAgentMeta(desc) {
   if (!desc) return {};
@@ -109,7 +111,7 @@ function AgentTooltipContent({ agent, meta, session, role, state, hookBead, last
   );
 }
 
-export default function AgentCards({ agents, polecats = [], sessions = [], onSelectAgent }) {
+export default function AgentCards({ agents, polecats = [], sessions = [], issues = [], onSelectAgent }) {
   const allAgents = useMemo(() => {
     const agentIds = new Set(agents.map(a => a.id));
     const merged = [...agents];
@@ -145,11 +147,7 @@ export default function AgentCards({ agents, polecats = [], sessions = [], onSel
         const roleLower = role?.toLowerCase() || '';
         const isActive = state === 'active' || state === 'in-progress' || state === 'in_progress' || state === 'working';
         const isWorkingPolecat = roleLower === 'polecat' && isActive;
-        const progressPct = isActive
-          ? 55 + ((a.id.charCodeAt(a.id.length - 1) || 0) % 35)
-          : state === 'blocked'
-          ? 30 + ((a.id.charCodeAt(0) || 0) % 20)
-          : 10 + ((a.id.charCodeAt(0) || 0) % 15);
+        const xp = calculateAgentXp(a, issues);
 
         return (
           <Tooltip
@@ -168,7 +166,10 @@ export default function AgentCards({ agents, polecats = [], sessions = [], onSel
               onClick={() => hasSession && onSelectAgent?.(getSessionName(a.id))}
             >
               <div className="agent-card-v2__header">
-                <div className="agent-card-v2__name">{shortTitle}</div>
+                <div className="agent-card-v2__header-left">
+                  <AgentAvatar role={role} active={isActive} size={24} />
+                  <div className="agent-card-v2__name">{shortTitle}</div>
+                </div>
                 <span
                   className={`role-icon role-icon--${roleLower || 'boot'}${isActive ? ' role-icon--active' : ''}`}
                   title={`${role || 'agent'}${hasSession ? ' (live)' : ' (no session)'}`}
@@ -206,12 +207,7 @@ export default function AgentCards({ agents, polecats = [], sessions = [], onSel
                 </span>
               </div>
 
-              <div className="agent-xp-bar">
-                <div
-                  className={`agent-xp-bar__fill${isActive ? ' agent-xp-bar__fill--active' : ''}`}
-                  style={{ width: `${progressPct}%` }}
-                />
-              </div>
+              <XpBar xp={xp} compact={false} />
             </div>
           </Tooltip>
         );

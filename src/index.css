@@ -1444,6 +1444,285 @@ body {
   border-radius: 0 0 6px 6px;
 }
 
+/* ── Work Tracker (convoy dispatch board) ── */
+.work-tracker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Summary bar */
+.work-summary {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.work-summary__progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.work-summary__bar-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.work-summary__pct {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-size: 13px;
+}
+.work-progress-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  display: flex;
+  overflow: hidden;
+  box-shadow: inset 0 1px 3px rgba(0,0,0,0.3);
+}
+.work-progress-bar__fill {
+  height: 100%;
+  transition: width 0.4s ease-out;
+}
+.work-progress-bar__fill--done {
+  background: var(--purple);
+  box-shadow: 0 0 4px rgba(123,94,167,0.4);
+}
+.work-progress-bar__fill--active {
+  background: var(--yellow);
+  box-shadow: 0 0 4px rgba(212,160,23,0.4);
+}
+.work-progress-bar__fill--blocked {
+  background: var(--red);
+  box-shadow: 0 0 4px rgba(181,68,46,0.4);
+}
+
+.work-summary__stats {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+.work-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 56px;
+}
+.work-stat__num {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 0 6px currentColor;
+}
+.work-stat__label {
+  font-size: 9px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Section headers */
+.work-section-header {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Convoy cards */
+.work-convoy-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.work-convoy-card {
+  padding: 10px 10px 10px 14px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--yellow);
+  border-radius: 3px;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: border-color 0.2s ease-out, box-shadow 0.2s ease-out;
+  box-shadow: inset 0 1px 0 rgba(193,127,36,0.05);
+}
+.work-convoy-card--active,
+.work-convoy-card--in-progress,
+.work-convoy-card--in_progress {
+  border-left-color: var(--green);
+}
+.work-convoy-card--blocked {
+  border-left-color: var(--red);
+}
+.work-convoy-card--idle {
+  border-left-color: var(--text-dim);
+}
+.work-convoy-card:hover {
+  box-shadow: 0 0 10px rgba(193,127,36,0.15), inset 0 1px 0 rgba(193,127,36,0.08);
+}
+.work-convoy-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.work-convoy-card__agent {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text-bright);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.work-convoy-card__bead {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--cyan);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.work-convoy-card__title {
+  font-size: 12px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.work-convoy-card__meta {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.work-convoy-card__rig {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+}
+.work-convoy-card__time {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-align: right;
+}
+
+/* Filter bar */
+.work-filter-bar {
+  display: flex;
+  gap: 2px;
+}
+.work-filter-btn {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-weight: 600;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--text-dim);
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: all 0.15s;
+}
+.work-filter-btn:hover {
+  border-color: var(--border-accent);
+  color: var(--text);
+}
+.work-filter-btn.active {
+  background: var(--border-accent);
+  color: var(--bg);
+  border-color: var(--border-accent);
+  font-weight: 700;
+}
+
+/* Work items list */
+.work-items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 8px;
+}
+.work-item-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg);
+  transition: background 0.2s ease-out, box-shadow 0.2s ease-out;
+}
+.work-item-row:hover {
+  background: var(--bg-hover);
+  box-shadow: 0 0 6px rgba(193,127,36,0.1);
+}
+.work-item-row--in-progress {
+  border-left: 3px solid var(--yellow);
+}
+.work-item-row--blocked {
+  border-left: 3px solid var(--red);
+}
+.work-item-row--closed {
+  border-left: 3px solid var(--purple);
+  opacity: 0.7;
+}
+.work-item-row__body {
+  min-width: 0;
+}
+.work-item-row__title {
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-bright);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.work-item-row__meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  flex-wrap: wrap;
+}
+.work-item-row__id {
+  font-family: var(--font-mono);
+}
+.work-item-row__assignee {
+  color: var(--cyan);
+}
+.work-item-row__rig {
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+}
+.work-item-row__time {
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
 /* ── Empty state ── */
 .empty {
   padding: 20px;

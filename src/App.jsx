@@ -11,6 +11,7 @@ import MetricsBar from './components/MetricsBar.jsx';
 import ActivityFeed from './components/ActivityFeed.jsx';
 import AgentDetail from './components/AgentDetail.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
+import WorkTracker from './components/WorkTracker.jsx';
 
 const initial = {
   connected: false,
@@ -63,6 +64,7 @@ function reducer(state, action) {
 }
 
 const TABS = [
+  { id: 'work', label: 'Work' },
   { id: 'sessions', label: 'Sessions' },
   { id: 'issues', label: 'Issues' },
   { id: 'mail', label: 'Mail' },
@@ -73,7 +75,7 @@ const TABS = [
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initial);
-  const [activeTab, setActiveTab] = useState('sessions');
+  const [activeTab, setActiveTab] = useState('work');
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const wsRef = useRef(null);
@@ -162,6 +164,10 @@ export default function App() {
 
   const tabBadge = (id) => {
     switch (id) {
+      case 'work': {
+        const active = state.agents.filter(a => a.hook_bead).length;
+        return active || null;
+      }
       case 'sessions': return state.sessions.length || null;
       case 'issues': return state.issues.length || null;
       case 'mail': return state.mail.length || null;
@@ -242,6 +248,7 @@ export default function App() {
             ))}
           </div>
           <div className="tab-content">
+            {activeTab === 'work' && <WorkTracker issues={state.issues} agents={state.agents} />}
             {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
             {activeTab === 'issues' && <IssueBoard issues={state.issues} dependencies={state.dependencies} />}
             {activeTab === 'mail' && <MailFeed mail={state.mail} agents={state.agents} />}

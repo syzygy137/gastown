@@ -33,9 +33,19 @@ export async function tmuxListSessions() {
   });
 }
 
-export async function tmuxCapture(session) {
-  const result = await exec('tmux', ['capture-pane', '-t', session, '-p', '-S', '-50']);
+export async function tmuxCapture(session, lines = 50) {
+  const result = await exec('tmux', ['capture-pane', '-t', session, '-p', '-S', `-${lines}`]);
   return result.ok ? result.stdout : `(no output for ${session})`;
+}
+
+export async function tmuxCaptureAll(lines = 5) {
+  const sessions = await tmuxListSessions();
+  const results = {};
+  await Promise.all(sessions.map(async (s) => {
+    const output = await tmuxCapture(s.name, lines);
+    results[s.name] = { output, lines: output.split('\n').filter(Boolean) };
+  }));
+  return results;
 }
 
 export async function gitInfo() {

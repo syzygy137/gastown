@@ -1,4 +1,4 @@
-import React, { useReducer, useEffect, useRef, useCallback } from 'react';
+import React, { useReducer, useEffect, useRef, useCallback, useState } from 'react';
 import TownOverview from './components/TownOverview.jsx';
 import AgentCards from './components/AgentCards.jsx';
 import MailFeed from './components/MailFeed.jsx';
@@ -8,6 +8,8 @@ import FormulaBrowser from './components/FormulaBrowser.jsx';
 import TmuxViewer from './components/TmuxViewer.jsx';
 import Controls from './components/Controls.jsx';
 import MetricsBar from './components/MetricsBar.jsx';
+import ActivityFeed from './components/ActivityFeed.jsx';
+import AgentDetail from './components/AgentDetail.jsx';
 
 const initial = {
   connected: false,
@@ -18,6 +20,7 @@ const initial = {
   labels: [],
   counts: [],
   sessions: [],
+  activity: [],
   git: { branches: [], worktrees: [] },
   daemon: { running: false, output: '' },
   formulas: [],
@@ -41,6 +44,7 @@ function reducer(state, action) {
     case 'tmux': return { ...state, sessions: action.sessions || state.sessions };
     case 'git': return { ...state, git: { branches: action.branches || [], worktrees: action.worktrees || [] } };
     case 'daemon': return { ...state, daemon: { running: action.running, output: action.output } };
+    case 'activity': return { ...state, activity: action.agents || state.activity };
     case 'formulas': return { ...state, formulas: action.formulas };
     case 'config': return { ...state, config: action.config };
     default: return state;
@@ -49,6 +53,7 @@ function reducer(state, action) {
 
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initial);
+  const [selectedAgent, setSelectedAgent] = useState(null);
   const wsRef = useRef(null);
   const retryRef = useRef(null);
 
@@ -97,6 +102,28 @@ export default function App() {
         mail={state.mail}
         daemon={state.daemon}
       />
+
+      <div className="activity-panel panel">
+        <div className="panel-header">
+          Live Activity
+          <span className="badge badge-active">{state.activity.filter(a => a.status === 'active').length} active</span>
+        </div>
+        <div className="panel-body">
+          <ActivityFeed
+            activity={state.activity}
+            agents={state.agents}
+            onSelectAgent={setSelectedAgent}
+          />
+        </div>
+      </div>
+
+      {selectedAgent && (
+        <AgentDetail
+          session={selectedAgent}
+          agents={state.agents}
+          onClose={() => setSelectedAgent(null)}
+        />
+      )}
 
       <div className="town-overview panel">
         <div className="panel-header">Town Overview</div>

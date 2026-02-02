@@ -12,6 +12,7 @@ import MetricsBar from './components/MetricsBar.jsx';
 import AgentDetail from './components/AgentDetail.jsx';
 import CommandPalette from './components/CommandPalette.jsx';
 import WorkTracker from './components/WorkTracker.jsx';
+import HealthDashboard from './components/HealthDashboard.jsx';
 import { useToast } from './components/Toast.jsx';
 import LiveTerminals from './components/LiveTerminals.jsx';
 import AchievementToast, { useAchievements } from './components/AchievementToast.jsx';
@@ -80,6 +81,7 @@ const TABS = [
   { id: 'mail', label: 'Mail' },
   { id: 'events', label: 'Events' },
   { id: 'formulas', label: 'Formulas' },
+  { id: 'health', label: 'Health' },
   { id: 'controls', label: 'Controls' },
   { id: 'overview', label: 'Map' },
 ];
@@ -457,6 +459,16 @@ export default function App() {
           )}
           {activeTab === 'events' && <EventTimeline events={state.events} />}
           {activeTab === 'formulas' && <FormulaBrowser formulas={state.formulas} />}
+          {activeTab === 'health' && (
+            <HealthDashboard
+              agents={state.agents}
+              sessions={state.sessions}
+              issues={state.issues}
+              events={state.events}
+              daemon={state.daemon}
+              polecats={state.polecats}
+            />
+          )}
           {activeTab === 'controls' && <Controls daemon={state.daemon} agents={state.agents} />}
           {activeTab === 'overview' && <TownOverview agents={state.agents} sessions={state.sessions} config={state.config} />}
         </div>

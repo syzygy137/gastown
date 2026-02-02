@@ -305,7 +305,7 @@ export default function App() {
             </button>
           ))}
         </div>
-        <div className="tab-content">
+        <div className="tab-content" key={activeTab}>
           {activeTab === 'work' && <WorkTracker issues={state.issues} agents={state.agents} />}
           {activeTab === 'agents' && <AgentCards agents={state.agents} sessions={state.sessions} onSelectAgent={setSelectedAgent} />}
           {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}

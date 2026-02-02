@@ -81,6 +81,15 @@ const ROLE_COLORS = {
   boot: '#8a7d65',
 };
 
+const ROLE_ICONS = {
+  mayor: '\u265B',
+  deacon: '\uD83D\uDEE1',
+  refinery: '\u2699',
+  witness: '\uD83D\uDC41',
+  polecat: '\uD83D\uDD27',
+  boot: '\u26A1',
+};
+
 function stateColor(state) {
   return STATE_COLORS[state?.toLowerCase()] || 'var(--yellow)';
 }
@@ -101,20 +110,30 @@ export default function AgentCards({ agents, sessions = [], onSelectAgent }) {
         const session = findSession(a.id, sessions);
         const hasSession = !!session;
         const roleColor = ROLE_COLORS[role?.toLowerCase()] || stateColor(state);
+        const roleLower = role?.toLowerCase() || '';
+        const isActive = state === 'active' || state === 'in-progress' || state === 'in_progress';
+        const isWorkingPolecat = roleLower === 'polecat' && isActive;
+        const progressPct = isActive
+          ? 55 + ((a.id.charCodeAt(a.id.length - 1) || 0) % 35)
+          : state === 'blocked'
+          ? 30 + ((a.id.charCodeAt(0) || 0) % 20)
+          : 10 + ((a.id.charCodeAt(0) || 0) % 15);
 
         return (
           <div
             key={a.id}
-            className={`agent-card-v2 agent-card-v2--${state?.toLowerCase() || 'idle'}${hasSession ? ' agent-card-v2--clickable' : ''}`}
+            className={`agent-card-v2 agent-card-v2--${state?.toLowerCase() || 'idle'}${hasSession ? ' agent-card-v2--clickable' : ''}${isWorkingPolecat ? ' agent-card-v2--barber-pole' : ''}`}
             style={{ borderLeftColor: roleColor }}
             onClick={() => hasSession && onSelectAgent?.(getSessionName(a.id))}
           >
             <div className="agent-card-v2__header">
               <div className="agent-card-v2__name">{shortTitle}</div>
               <span
-                className={`agent-card-v2__dot ${state === 'working' ? 'agent-card-v2__dot--working' : state === 'idle' ? 'agent-card-v2__dot--idle' : 'agent-card-v2__dot--dead'}`}
-                title={state === 'working' ? 'Working' : state === 'idle' ? 'Idle (no hook)' : 'Offline'}
-              />
+                className={`role-icon role-icon--${roleLower || 'boot'}${isActive ? ' role-icon--active' : ''}`}
+                title={`${role || 'agent'}${hasSession ? ' (live)' : ' (no session)'}`}
+              >
+                {ROLE_ICONS[roleLower] || '\u2699'}
+              </span>
             </div>
 
             <div className="agent-card-v2__badges">
@@ -144,6 +163,13 @@ export default function AgentCards({ agents, sessions = [], onSelectAgent }) {
                 )}
                 {relativeTime(lastActivity)}
               </span>
+            </div>
+
+            <div className="agent-xp-bar">
+              <div
+                className={`agent-xp-bar__fill${isActive ? ' agent-xp-bar__fill--active' : ''}`}
+                style={{ width: `${progressPct}%` }}
+              />
             </div>
           </div>
         );

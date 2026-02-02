@@ -2742,3 +2742,173 @@ body {
     opacity: 0;
   }
 }
+
+/* ======================================================
+   Game-like Visual Flair (gs-91ru)
+   ====================================================== */
+
+/* -- Role Icons (animated per role) -- */
+.role-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-size: 14px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.role-icon--mayor {
+  text-shadow: 0 0 6px rgba(193,127,36,0.5);
+  animation: role-glow-gold 2.5s ease-in-out infinite;
+}
+.role-icon--refinery.role-icon--active {
+  animation: role-spin 2s linear infinite;
+}
+.role-icon--witness {
+  animation: role-blink 4s ease-in-out infinite;
+}
+.role-icon--polecat.role-icon--active {
+  animation: role-wobble 0.6s ease-in-out infinite;
+}
+.role-icon--deacon {
+  text-shadow: 0 0 4px rgba(193,127,36,0.3);
+}
+
+@keyframes role-glow-gold {
+  0%, 100% { text-shadow: 0 0 4px rgba(193,127,36,0.3); }
+  50% { text-shadow: 0 0 12px rgba(193,127,36,0.8), 0 0 24px rgba(193,127,36,0.3); }
+}
+@keyframes role-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes role-blink {
+  0%, 90%, 100% { opacity: 1; }
+  95% { opacity: 0.1; }
+}
+@keyframes role-wobble {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+
+/* -- Breathing glow on active agent cards -- */
+.agent-card-v2--active,
+.agent-card-v2--in-progress,
+.agent-card-v2--in_progress {
+  animation: breathing-glow 3s ease-in-out infinite;
+}
+@keyframes breathing-glow {
+  0%, 100% {
+    box-shadow: inset 0 1px 0 rgba(90,158,62,0.05), 0 0 4px rgba(90,158,62,0.08);
+  }
+  50% {
+    box-shadow: inset 0 1px 0 rgba(90,158,62,0.1), 0 0 14px rgba(90,158,62,0.2), 0 0 28px rgba(90,158,62,0.08);
+  }
+}
+
+/* -- Idle agent desaturation -- */
+.agent-card-v2--idle {
+  filter: saturate(0.6);
+}
+.agent-card-v2--idle:hover {
+  filter: saturate(0.85);
+}
+
+/* -- Barber pole (working polecat left border) -- */
+.agent-card-v2--barber-pole {
+  border-left-color: transparent !important;
+}
+.agent-card-v2--barber-pole::before {
+  content: '';
+  position: absolute;
+  left: -4px;
+  top: -1px;
+  bottom: -1px;
+  width: 4px;
+  background: repeating-linear-gradient(
+    0deg,
+    var(--green) 0px,
+    var(--green) 4px,
+    var(--yellow) 4px,
+    var(--yellow) 8px
+  );
+  animation: barber-pole 0.5s linear infinite;
+  border-radius: 3px 0 0 3px;
+}
+@keyframes barber-pole {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 8px; }
+}
+
+/* -- Agent XP progress bar -- */
+.agent-xp-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(74,61,46,0.3);
+  overflow: hidden;
+  margin-top: 4px;
+}
+.agent-xp-bar__fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.6s ease-out;
+  background: linear-gradient(90deg, var(--border-accent), var(--accent));
+  box-shadow: 0 0 4px rgba(193,127,36,0.3);
+}
+.agent-xp-bar__fill--active {
+  animation: xp-shimmer 2s ease-in-out infinite;
+}
+@keyframes xp-shimmer {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; box-shadow: 0 0 8px rgba(193,127,36,0.5); }
+}
+
+/* -- Metric number flash -- */
+.metric-flash-up {
+  animation: metric-flash-green 0.6s ease-out !important;
+}
+.metric-flash-down {
+  animation: metric-flash-red 0.6s ease-out !important;
+}
+@keyframes metric-flash-green {
+  0% { text-shadow: 0 0 20px var(--green), 0 0 40px rgba(90,158,62,0.4); }
+  100% { text-shadow: 0 0 8px currentColor; }
+}
+@keyframes metric-flash-red {
+  0% { text-shadow: 0 0 20px var(--red), 0 0 40px rgba(181,68,46,0.4); }
+  100% { text-shadow: 0 0 8px currentColor; }
+}
+
+/* -- Sparkline mini-charts -- */
+.sparkline {
+  display: block;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+/* -- Event type icons -- */
+.event-icon {
+  display: inline-block;
+  width: 16px;
+  text-align: center;
+  font-size: 11px;
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+.event-icon--start { color: var(--green); }
+.event-icon--end { color: var(--red); }
+.event-icon--mail { color: var(--orange); }
+.event-icon--merge { color: var(--cyan); }
+.event-icon--error { color: var(--red); text-shadow: 0 0 4px rgba(181,68,46,0.4); }
+.event-icon--default { color: var(--accent); }
+
+/* -- Tab content slide transition -- */
+.tab-content {
+  animation: tab-slide-in 0.15s ease-out;
+}
+@keyframes tab-slide-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}

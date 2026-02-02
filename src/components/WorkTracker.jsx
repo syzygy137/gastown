@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import StatusBadge from './StatusBadge.jsx';
 import Tooltip from './Tooltip.jsx';
 import LinkedText from './LinkedText.jsx';
+import ConvoyGraph from './ConvoyGraph.jsx';
 
 function relativeTime(isoString) {
   if (!isoString) return null;
@@ -24,7 +25,7 @@ function progressPercent(done, total) {
   return Math.round((done / total) * 100);
 }
 
-export default function WorkTracker({ issues, agents, onDrillIssue, onDrillAgent }) {
+export default function WorkTracker({ issues, agents, dependencies, onDrillIssue, onDrillAgent }) {
   const [filter, setFilter] = useState('all');
 
   // Build convoy map: agents with active hook_beads
@@ -115,6 +116,14 @@ export default function WorkTracker({ issues, agents, onDrillIssue, onDrillAgent
           </Tooltip>
         </div>
       </div>
+
+      {/* Dependency graph */}
+      <ConvoyGraph
+        issues={issues}
+        dependencies={dependencies}
+        agents={agents}
+        onDrillIssue={onDrillIssue}
+      />
 
       {/* Active convoys */}
       {convoys.length > 0 && (

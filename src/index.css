@@ -2518,6 +2518,132 @@ body {
   white-space: nowrap;
 }
 
+/* ── Convoy Dependency Graph ── */
+.convoy-graph {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  padding: 0 0 4px;
+}
+.convoy-graph__viewport {
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 4px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-accent) var(--bg);
+}
+.convoy-graph__svg {
+  display: block;
+  min-width: 100%;
+}
+.convoy-graph__edge {
+  transition: stroke-opacity 0.2s;
+}
+.convoy-graph__node:hover circle {
+  stroke: var(--text-bright);
+  stroke-width: 2;
+}
+.convoy-graph__node--expanded circle {
+  stroke: var(--accent);
+}
+.convoy-graph__label {
+  font-family: var(--font-mono);
+  pointer-events: none;
+  user-select: none;
+}
+.convoy-graph__pulse {
+  animation: convoy-pulse 2s ease-in-out infinite;
+}
+@keyframes convoy-pulse {
+  0%, 100% { opacity: 0.3; r: 18; }
+  50% { opacity: 0.8; r: 22; }
+}
+
+/* Expanded detail panel */
+.convoy-graph__detail {
+  margin: 4px 8px 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border-accent);
+  border-radius: 3px;
+  background: var(--bg-card);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: var(--shadow-warm);
+}
+.convoy-graph__detail-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.convoy-graph__detail-id {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cyan);
+}
+.convoy-graph__detail-status {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.convoy-graph__detail-close {
+  margin-left: auto;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 1px 6px;
+  line-height: 1;
+}
+.convoy-graph__detail-close:hover {
+  color: var(--text-bright);
+  border-color: var(--border-accent);
+}
+.convoy-graph__detail-title {
+  font-size: 13px;
+  color: var(--text-bright);
+  font-weight: 500;
+}
+.convoy-graph__detail-meta {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.convoy-graph__detail-tag {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg);
+}
+.convoy-graph__detail-tag--hooked {
+  color: var(--accent);
+  border-color: var(--border-accent);
+  text-shadow: var(--brass-glow);
+}
+.convoy-graph__detail-deps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 2px;
+}
+.convoy-graph__dep-link {
+  font-size: 10px;
+  color: var(--text-dim);
+}
+.convoy-graph__dep-link--blocker {
+  color: var(--red);
+}
+.convoy-graph__dep-link--blocks {
+  color: var(--yellow);
+}
+
 /* ── Live Terminal Grid (multi-pane CRT array) ── */
 .tgrid {
   display: flex;

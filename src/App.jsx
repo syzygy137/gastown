@@ -425,6 +425,7 @@ export default function App() {
             <WorkTracker
               issues={state.issues}
               agents={state.agents}
+              dependencies={state.dependencies}
               onDrillIssue={drillIssue}
               onDrillAgent={drillAgent}
             />

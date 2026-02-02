@@ -2,7 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import { getIssues, getAgents, getMail, getEvents, getLabels, getIssueCounts, getConfig as getDbConfig, getRigs } from './db.js';
-import { tmuxListSessions, tmuxCapture, gitInfo, daemonStatus, loadFormulas, loadConfig, runCommand } from './shell.js';
+import { tmuxListSessions, tmuxCapture, tmuxCaptureAll, gitInfo, daemonStatus, loadFormulas, loadConfig, runCommand } from './shell.js';
 import { addClient, startAll } from './poller.js';
 
 const app = express();
@@ -83,6 +83,27 @@ app.get('/api/sessions', async (req, res) => {
 app.get('/api/sessions/:name', async (req, res) => {
   try { res.json({ name: req.params.name, output: await tmuxCapture(req.params.name) }); }
   catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/activity', async (req, res) => {
+  try {
+    const sessions = await tmuxCaptureAll(5);
+    const activity = Object.entries(sessions).map(([name, data]) => ({
+      session: name,
+      agent: name,
+      lastLines: data.lines,
+      status: data.lines.length > 0 ? 'active' : 'idle',
+      timestamp: new Date().toISOString(),
+    }));
+    res.json(activity);
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+app.get('/api/sessions/all', async (req, res) => {
+  try {
+    const sessions = await tmuxCaptureAll(20);
+    res.json({ sessions });
+  } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
 app.get('/api/rigs', (req, res) => {

@@ -1,5 +1,6 @@
 import { getSnapshot } from './db.js';
-import { tmuxListSessions, tmuxCapture, gitInfo, daemonStatus } from './shell.js';
+import { tmuxListSessions, tmuxCapture, tmuxCaptureAll, gitInfo, daemonStatus } from './shell.js';
+import { createHash } from 'crypto';
 
 let lastHash = '';
 let clients = new Set();
@@ -82,9 +83,34 @@ export function startDaemonPoll() {
   }, 10000);
 }
 
+// Activity poll — every 3 seconds
+let activityInterval = null;
+let lastActivityHash = '';
+export function startActivityPoll() {
+  if (activityInterval) return;
+  activityInterval = setInterval(async () => {
+    try {
+      const sessions = await tmuxCaptureAll(5);
+      const activity = Object.entries(sessions).map(([name, data]) => ({
+        session: name,
+        agent: name,
+        lastLines: data.lines,
+        status: data.lines.length > 0 ? 'active' : 'idle',
+        timestamp: new Date().toISOString(),
+      }));
+      const hash = createHash('md5').update(JSON.stringify(activity.map(a => a.lastLines))).digest('hex');
+      if (hash !== lastActivityHash) {
+        lastActivityHash = hash;
+        broadcast({ type: 'activity', agents: activity });
+      }
+    } catch { /* ignore */ }
+  }, 3000);
+}
+
 export function startAll() {
   startDbPoll();
   startTmuxPoll();
   startGitPoll();
   startDaemonPoll();
+  startActivityPoll();
 }

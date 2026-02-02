@@ -4,29 +4,29 @@ export default function MetricsBar({ agents, issues, counts, mail, daemon }) {
   const metrics = useMemo(() => {
     const totalAgents = agents.length;
     const activePolecats = agents.filter(a => {
-      const role = (a.role_type || a.description || '').toLowerCase();
-      const state = a.agent_state || '';
-      return role.includes('polecat') && state === 'active';
+      const role = (a.role_type || '').toLowerCase();
+      const state = (a.agent_state || '').toLowerCase();
+      return role === 'polecat' && a.status === 'open';
     }).length;
 
     // Derive from counts array (pre-aggregated by status)
     const countMap = {};
     for (const c of counts) countMap[c.status] = c.count;
     const pending = countMap['open'] || 0;
-    const inProgress = countMap['in-progress'] || 0;
+    const inProgress = (countMap['in_progress'] || 0) + (countMap['in-progress'] || 0) + (countMap['hooked'] || 0);
 
     // Merge queue: issues of type merge-request that are open
     const mergeQueue = issues.filter(
-      i => i.issue_type === 'merge-request' && i.status === 'open'
+      i => i.issue_type === 'merge-request' && (i.status === 'open' || i.status === 'in_progress')
     ).length;
 
     const mailCount = mail.length;
 
-    // Health: green if agents exist and most active, yellow if some idle, red if none
+    // Health: based on open (alive) agents vs closed ones
     let health = 'neutral';
     if (totalAgents > 0) {
-      const activeCount = agents.filter(a => a.agent_state === 'active').length;
-      const ratio = activeCount / totalAgents;
+      const aliveCount = agents.filter(a => a.status === 'open').length;
+      const ratio = aliveCount / totalAgents;
       health = ratio > 0.5 ? 'good' : ratio > 0 ? 'warn' : 'idle';
     }
 

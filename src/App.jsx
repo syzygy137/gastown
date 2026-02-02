@@ -8,6 +8,8 @@ import FormulaBrowser from './components/FormulaBrowser.jsx';
 import TmuxViewer from './components/TmuxViewer.jsx';
 import Controls from './components/Controls.jsx';
 import MetricsBar from './components/MetricsBar.jsx';
+import ActivityFeed from './components/ActivityFeed.jsx';
+import AgentDetail from './components/AgentDetail.jsx';
 
 const initial = {
   connected: false,
@@ -18,6 +20,7 @@ const initial = {
   labels: [],
   counts: [],
   sessions: [],
+  activity: [],
   git: { branches: [], worktrees: [] },
   daemon: { running: false, output: '' },
   formulas: [],
@@ -41,6 +44,7 @@ function reducer(state, action) {
     case 'tmux': return { ...state, sessions: action.sessions || state.sessions };
     case 'git': return { ...state, git: { branches: action.branches || [], worktrees: action.worktrees || [] } };
     case 'daemon': return { ...state, daemon: { running: action.running, output: action.output } };
+    case 'activity': return { ...state, activity: action.agents || state.activity };
     case 'formulas': return { ...state, formulas: action.formulas };
     case 'config': return { ...state, config: action.config };
     default: return state;
@@ -59,6 +63,7 @@ const TABS = [
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initial);
   const [activeTab, setActiveTab] = useState('sessions');
+  const [selectedAgent, setSelectedAgent] = useState(null);
   const wsRef = useRef(null);
   const retryRef = useRef(null);
 
@@ -123,6 +128,15 @@ export default function App() {
         </div>
       </header>
 
+      {/* Live activity strip */}
+      <div className="activity-strip">
+        <ActivityFeed
+          activity={state.activity}
+          agents={state.agents}
+          onSelectAgent={setSelectedAgent}
+        />
+      </div>
+
       {/* Main area: left=overview+agents, right=tabbed detail */}
       <div className="dashboard-main">
         <div className="main-left">
@@ -166,6 +180,15 @@ export default function App() {
           </div>
         </div>
       </div>
+
+      {/* Agent detail modal */}
+      {selectedAgent && (
+        <AgentDetail
+          session={selectedAgent}
+          agents={state.agents}
+          onClose={() => setSelectedAgent(null)}
+        />
+      )}
     </div>
   );
 }

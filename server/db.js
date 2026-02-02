@@ -95,12 +95,29 @@ export function getIssues({ type, status, limit } = {}) {
   return results;
 }
 
+function parseDescriptionMeta(desc) {
+  if (!desc) return {};
+  const meta = {};
+  for (const line of desc.split('\n')) {
+    const m = line.match(/^(\w+):\s*(.+)$/);
+    if (m && m[2].trim() !== 'null') meta[m[1]] = m[2].trim();
+  }
+  return meta;
+}
+
 export function getAgents() {
   const results = queryAll(db =>
     db.prepare(
       "SELECT * FROM issues WHERE issue_type = 'agent' OR (role_type IS NOT NULL AND role_type != '') ORDER BY created_at ASC"
     ).all()
   );
+  // Parse description metadata into top-level fields
+  for (const agent of results) {
+    const meta = parseDescriptionMeta(agent.description);
+    if (!agent.role_type) agent.role_type = meta.role_type || '';
+    if (!agent.agent_state) agent.agent_state = meta.agent_state || 'idle';
+    if (!agent.hook_bead) agent.hook_bead = meta.hook_bead || '';
+  }
   results.sort((a, b) => (a.created_at || '').localeCompare(b.created_at || ''));
   return results;
 }
@@ -154,7 +171,7 @@ export function getConfig() {
 
 export function getIssueCounts() {
   const allCounts = queryAll(db =>
-    db.prepare("SELECT status, COUNT(*) as count FROM issues GROUP BY status").all()
+    db.prepare("SELECT status, COUNT(*) as count FROM issues WHERE issue_type NOT IN ('agent', 'message') GROUP BY status").all()
   );
   const merged = {};
   for (const row of allCounts) {

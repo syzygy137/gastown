@@ -13,6 +13,7 @@ const classMap = {
   message: 'badge-message',
   task: 'badge-task',
   convoy: 'badge-convoy',
+  hooked: 'badge-in-progress',
 };
 
 export default function StatusBadge({ value }) {

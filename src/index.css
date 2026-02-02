@@ -459,6 +459,7 @@ body {
   background: var(--bg-card);
   transition: background 0.2s ease-out, box-shadow 0.2s ease-out, transform 0.1s ease-out;
   box-shadow: 1px 2px 4px rgba(0,0,0,0.2);
+  cursor: pointer;
 }
 .issue-card:hover {
   background: var(--bg-hover);
@@ -466,15 +467,96 @@ body {
 }
 .issue-card:active { transform: scale(0.98); }
 
-.issue-card .issue-title {
-  font-weight: 500;
-  color: var(--text-bright);
+.issue-card--expanded {
+  border-color: var(--border-accent);
+  box-shadow: 1px 2px 8px rgba(0,0,0,0.3), 0 0 6px rgba(193,127,36,0.15);
+}
+
+.issue-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   margin-bottom: 2px;
+}
+
+.issue-id {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-dim);
+}
+
+.issue-priority {
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+.issue-priority-P0 { color: var(--red); }
+.issue-priority-P1 { color: var(--orange); }
+.issue-priority-P2 { color: var(--yellow); }
+.issue-priority-P3 { color: var(--text-dim); }
+
+.issue-card .issue-title {
+  font-weight: 600;
+  color: var(--text-bright);
+  margin-bottom: 4px;
 }
 
 .issue-card .issue-meta {
   font-size: 10px;
   color: var(--text-dim);
+  font-family: var(--font-mono);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.issue-assignee {
+  color: var(--cyan);
+}
+
+.issue-expanded {
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+}
+
+.issue-description {
+  white-space: pre-wrap;
+  font-size: 11px;
+  color: var(--text-dim);
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 8px;
+  background: var(--bg);
+  border-radius: 3px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.issue-detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.issue-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+}
+
+.issue-detail-label {
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+  min-width: 60px;
+}
+
+.issue-detail-value {
+  color: var(--text);
   font-family: var(--font-mono);
 }
 

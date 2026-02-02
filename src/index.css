@@ -408,33 +408,156 @@ body {
 .session-tab:hover { border-color: var(--accent); color: var(--text); }
 .session-tab.active { background: var(--accent); color: #000; border-color: var(--accent); }
 
-/* Controls */
+/* Controls panel */
+.controls-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* Daemon status */
+.daemon-status {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+}
+.daemon-status.daemon-running { border-color: var(--green); background: #0d2818; }
+.daemon-status.daemon-stopped { border-color: var(--red); background: #2d1418; }
+.daemon-indicator { display: flex; align-items: center; gap: 8px; }
+.daemon-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+}
+.daemon-dot.active { background: var(--green); animation: pulse 2s ease-in-out infinite; }
+.daemon-label { font-size: 12px; font-weight: 600; color: var(--text-bright); }
+.daemon-detail { font-size: 10px; color: var(--text-dim); margin-top: 2px; padding-left: 18px; }
+
+/* Button groups */
+.btn-group { }
+.btn-group-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+  padding-bottom: 3px;
+  border-bottom: 1px solid var(--border);
+}
+
 .control-btn {
   display: block;
   width: 100%;
-  padding: 8px 12px;
-  margin-bottom: 6px;
+  padding: 6px 10px;
+  margin-top: 4px;
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 4px;
   background: var(--bg);
   color: var(--text);
-  font-size: 12px;
+  font-size: 11px;
   cursor: pointer;
   text-align: left;
   transition: all 0.2s ease-out;
 }
-.control-btn:hover {
+.control-btn:hover:not(:disabled) {
   border-color: var(--accent);
   background: var(--bg-hover);
 }
 .control-btn:active { transform: scale(0.98); }
+.control-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .control-btn.primary {
   background: #1a3a5c;
   border-color: var(--accent);
 }
 
+.control-btn.success { border-color: #1a4d2e; color: var(--green); }
+.control-btn.success:hover:not(:disabled) { border-color: var(--green); background: #0d2818; }
+
+.control-btn.danger { border-color: #5c1a1a; color: var(--red); }
+.control-btn.danger:hover:not(:disabled) { border-color: var(--red); background: #2d1418; }
+
+/* Success flash animation */
+@keyframes btn-flash {
+  0% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0.4); }
+  50% { box-shadow: 0 0 0 3px rgba(63, 185, 80, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(63, 185, 80, 0); }
+}
+.control-btn.flash { animation: btn-flash 0.6s ease-out; border-color: var(--green); }
+
+/* Agent controls */
+.agent-controls { display: flex; flex-direction: column; gap: 3px; margin-top: 4px; }
+.agent-ctrl-row { display: flex; align-items: center; gap: 4px; }
+.agent-ctrl-name {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.control-btn-mini {
+  width: 26px; height: 26px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.control-btn-mini:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+}
+.control-btn-mini:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Custom command input */
+.cmd-input-form { margin-top: 4px; }
+.cmd-input {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #000;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.cmd-input:focus { border-color: var(--accent); }
+.cmd-input::placeholder { color: var(--text-dim); }
+.cmd-input:disabled { opacity: 0.5; }
+
+/* Output section */
+.output-section { margin-top: 2px; }
+.output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-bottom: 4px;
+}
+.output-clear {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 10px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.output-clear:hover { color: var(--text); }
+
 .cmd-output {
-  margin-top: 8px;
   font-family: var(--font-mono);
   font-size: 10px;
   padding: 8px;
@@ -442,8 +565,9 @@ body {
   border-radius: 8px;
   white-space: pre-wrap;
   color: var(--text-dim);
-  max-height: 150px;
+  max-height: 200px;
   overflow-y: auto;
+  word-break: break-all;
 }
 
 /* Scrollbar - WebKit */

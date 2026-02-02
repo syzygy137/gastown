@@ -97,7 +97,7 @@ export default function App() {
       <div className="controls panel">
         <div className="panel-header">Controls</div>
         <div className="panel-body">
-          <Controls daemon={state.daemon} />
+          <Controls daemon={state.daemon} agents={state.agents} />
         </div>
       </div>
 

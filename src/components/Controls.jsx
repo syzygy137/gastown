@@ -48,6 +48,11 @@ export default function Controls({ daemon, agents = [] }) {
     setRunning(false);
   }
 
+  async function restart() {
+    await run('gt', ['down'], null);
+    await run('gt', ['up'], 'restart');
+  }
+
   function handleCustomCmd(e) {
     e.preventDefault();
     const trimmed = customCmd.trim();
@@ -109,7 +114,7 @@ export default function Controls({ daemon, agents = [] }) {
         <button
           className={`control-btn ${flashBtn === 'restart' ? 'flash' : ''}`}
           disabled={running}
-          onClick={() => run('gt', ['down'], 'restart')}
+          onClick={restart}
         >
           ↻ Restart
         </button>

@@ -11,10 +11,20 @@ function relativeTime(isoString) {
   return `${hours}h`;
 }
 
+function extractNudgeName(sessionName) {
+  // gt-gastown-furiosa -> furiosa
+  const m = sessionName.match(/^gt-\w+-(.+)$/);
+  return m ? m[1] : null;
+}
+
 export default function AgentDetail({ session, agents = [], onClose }) {
   const [output, setOutput] = useState('');
   const [autoScroll, setAutoScroll] = useState(true);
+  const [nudgeText, setNudgeText] = useState('');
+  const [nudgeSending, setNudgeSending] = useState(false);
+  const [nudgeResult, setNudgeResult] = useState(null);
   const outputRef = useRef(null);
+  const nudgeInputRef = useRef(null);
 
   // Find the matching agent metadata
   const agent = agents.find(a => {
@@ -64,6 +74,33 @@ export default function AgentDetail({ session, agents = [], onClose }) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
+  const nudgeName = session ? extractNudgeName(session) : null;
+
+  async function sendNudge(e) {
+    e.preventDefault();
+    if (!nudgeName || !nudgeText.trim()) return;
+    setNudgeSending(true);
+    setNudgeResult(null);
+    try {
+      const res = await fetch('/api/cmd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cmd: 'gt', args: ['nudge', nudgeName, nudgeText.trim()] }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setNudgeResult('sent');
+        setNudgeText('');
+      } else {
+        setNudgeResult(data.error || 'error');
+      }
+    } catch {
+      setNudgeResult('error');
+    }
+    setNudgeSending(false);
+    setTimeout(() => setNudgeResult(null), 3000);
+  }
+
   if (!session) return null;
 
   const displayName = session.replace(/^(gt|hq)-/, '').replace(/-/g, '/');
@@ -97,6 +134,30 @@ export default function AgentDetail({ session, agents = [], onClose }) {
         <div className="agent-detail-terminal" ref={outputRef}>
           {output || '(no output)'}
         </div>
+        {nudgeName && (
+          <form className="agent-detail-nudge" onSubmit={sendNudge}>
+            <input
+              ref={nudgeInputRef}
+              className="agent-detail-nudge__input"
+              type="text"
+              placeholder={`Nudge ${nudgeName}...`}
+              value={nudgeText}
+              onChange={e => setNudgeText(e.target.value)}
+              disabled={nudgeSending}
+            />
+            <button
+              className={`agent-detail-nudge__btn${nudgeResult === 'sent' ? ' agent-detail-nudge__btn--sent' : ''}`}
+              type="submit"
+              disabled={nudgeSending || !nudgeText.trim()}
+              title="Send nudge"
+            >
+              {nudgeSending ? '...' : nudgeResult === 'sent' ? 'Sent' : 'Nudge'}
+            </button>
+            {nudgeResult && nudgeResult !== 'sent' && (
+              <span className="agent-detail-nudge__error">{nudgeResult}</span>
+            )}
+          </form>
+        )}
       </div>
     </div>
   );

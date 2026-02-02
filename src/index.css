@@ -2119,7 +2119,124 @@ body {
   color: #5a9e3e;
   text-shadow: 0 0 2px rgba(90,158,62,0.3);
   background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+  border-radius: 0 0 0 6px;
+}
+
+/* ── Agent Detail Nudge Bar ── */
+.agent-detail-nudge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-elevated);
   border-radius: 0 0 6px 6px;
+  flex-shrink: 0;
+}
+.agent-detail-nudge__input {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-bright);
+  outline: none;
+}
+.agent-detail-nudge__input:focus {
+  border-color: var(--accent);
+}
+.agent-detail-nudge__input::placeholder {
+  color: var(--text-dim);
+}
+.agent-detail-nudge__btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  background: rgba(193,127,36,0.15);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 3px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.agent-detail-nudge__btn:hover:not(:disabled) {
+  background: rgba(193,127,36,0.3);
+}
+.agent-detail-nudge__btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.agent-detail-nudge__btn--sent {
+  border-color: var(--green);
+  color: var(--green);
+  background: rgba(90,158,62,0.15);
+}
+.agent-detail-nudge__error {
+  font-size: 11px;
+  color: var(--red);
+}
+
+/* ── Quick Nudge (agent cards) ── */
+.quick-nudge {
+  display: inline-flex;
+  align-items: center;
+}
+.quick-nudge__trigger {
+  font-size: 9px;
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg-elevated);
+  color: var(--text-dim);
+  cursor: pointer;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.quick-nudge__trigger:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.quick-nudge__trigger--sent {
+  border-color: var(--green);
+  color: var(--green);
+}
+.quick-nudge__form {
+  display: flex;
+  gap: 3px;
+}
+.quick-nudge__input {
+  width: 80px;
+  padding: 1px 4px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  color: var(--text-bright);
+  outline: none;
+}
+.quick-nudge__input::placeholder {
+  color: var(--text-dim);
+}
+.quick-nudge__send {
+  font-size: 9px;
+  padding: 1px 5px;
+  border: 1px solid var(--accent);
+  border-radius: 2px;
+  background: rgba(193,127,36,0.15);
+  color: var(--accent);
+  cursor: pointer;
+  font-weight: 700;
+}
+.quick-nudge__send:hover:not(:disabled) {
+  background: rgba(193,127,36,0.3);
+}
+.quick-nudge__send:disabled {
+  opacity: 0.4;
+  cursor: default;
 }
 
 /* ── Work Tracker (convoy dispatch board) ── */

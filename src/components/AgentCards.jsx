@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useCallback } from 'react';
 import StatusBadge from './StatusBadge.jsx';
 import Tooltip from './Tooltip.jsx';
 import AgentAvatar from './AgentAvatar.jsx';
@@ -95,6 +95,75 @@ const ROLE_ICONS = {
 
 function stateColor(state) {
   return STATE_COLORS[state?.toLowerCase()] || 'var(--yellow)';
+}
+
+function getNudgeName(agentId) {
+  const m = agentId.match(/polecat-(\w+)$/);
+  if (m) return m[1];
+  const m2 = agentId.match(/^gt-\w+-(.+)$/);
+  return m2 ? m2[1] : null;
+}
+
+function QuickNudge({ agentId, hasSession }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState('');
+  const [sending, setSending] = useState(false);
+  const [result, setResult] = useState(null);
+  const name = getNudgeName(agentId);
+
+  const send = useCallback(async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!name) return;
+    const msg = text.trim() || 'wake up';
+    setSending(true);
+    setResult(null);
+    try {
+      const res = await fetch('/api/cmd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cmd: 'gt', args: ['nudge', name, msg] }),
+      });
+      setResult(res.ok ? 'sent' : 'error');
+    } catch {
+      setResult('error');
+    }
+    setSending(false);
+    setText('');
+    setTimeout(() => { setResult(null); setOpen(false); }, 1500);
+  }, [name, text]);
+
+  if (!hasSession || !name) return null;
+
+  return (
+    <div className="quick-nudge" onClick={e => e.stopPropagation()}>
+      {!open ? (
+        <button
+          className={`quick-nudge__trigger${result === 'sent' ? ' quick-nudge__trigger--sent' : ''}`}
+          title={`Nudge ${name}`}
+          onClick={e => { e.stopPropagation(); setOpen(true); }}
+        >
+          {result === 'sent' ? 'Sent' : 'Nudge'}
+        </button>
+      ) : (
+        <form className="quick-nudge__form" onSubmit={send}>
+          <input
+            className="quick-nudge__input"
+            type="text"
+            placeholder="wake up"
+            value={text}
+            onChange={e => setText(e.target.value)}
+            disabled={sending}
+            autoFocus
+            onKeyDown={e => { if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); } }}
+          />
+          <button className="quick-nudge__send" type="submit" disabled={sending}>
+            {sending ? '..' : 'Go'}
+          </button>
+        </form>
+      )}
+    </div>
+  );
 }
 
 function AgentTooltipContent({ agent, meta, session, role, state, hookBead, lastActivity, rig }) {
@@ -198,6 +267,7 @@ export default function AgentCards({ agents, polecats = [], sessions = [], issue
               <div className="agent-card-v2__footer">
                 <span className="agent-card-v2__id">{a.id}</span>
                 <span className="agent-card-v2__activity">
+                  <QuickNudge agentId={a.id} hasSession={hasSession} />
                   {hasSession && (
                     <span className="agent-card-v2__session-icon" title={session?.attached ? 'Attached' : 'Detached'}>
                       &#9618;{session?.attached ? '+' : ''}

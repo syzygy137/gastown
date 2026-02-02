@@ -102,6 +102,8 @@ export default function App() {
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [breadcrumbs, setBreadcrumbs] = useState([]); // [{label, action}]
   const [focusIssueId, setFocusIssueId] = useState(null);
+  const [terminalsCollapsed, setTerminalsCollapsed] = useState(false);
+  const [bottomCollapsed, setBottomCollapsed] = useState(false);
   const wsRef = useRef(null);
   const retryRef = useRef(null);
   const addToast = useToast();
@@ -373,12 +375,30 @@ export default function App() {
       )}
 
       {/* Primary view: live terminal grid */}
-      <div className="live-terminals-area">
-        <LiveTerminals agents={state.agents} onSelectAgent={setSelectedAgent} />
+      <div className={`live-terminals-area ${terminalsCollapsed ? 'panel-collapsed' : ''}`}>
+        <button
+          className="panel-collapse-toggle"
+          onClick={() => setTerminalsCollapsed(c => !c)}
+          aria-label={terminalsCollapsed ? 'Expand terminals' : 'Collapse terminals'}
+        >
+          <span className="panel-collapse-label">Terminals</span>
+          <span className="panel-collapse-icon">{terminalsCollapsed ? '\u25BC' : '\u25B2'}</span>
+        </button>
+        {!terminalsCollapsed && (
+          <LiveTerminals agents={state.agents} onSelectAgent={setSelectedAgent} />
+        )}
       </div>
 
       {/* Bottom panel: tabbed detail views */}
-      <div className="dashboard-bottom">
+      <div className={`dashboard-bottom ${bottomCollapsed ? 'panel-collapsed' : ''}`}>
+        <button
+          className="panel-collapse-toggle"
+          onClick={() => setBottomCollapsed(c => !c)}
+          aria-label={bottomCollapsed ? 'Expand panel' : 'Collapse panel'}
+        >
+          <span className="panel-collapse-label">Details</span>
+          <span className="panel-collapse-icon">{bottomCollapsed ? '\u25BC' : '\u25B2'}</span>
+        </button>
         <div className="tab-bar">
           {TABS.map((t, idx) => (
             <button

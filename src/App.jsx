@@ -104,7 +104,12 @@ export default function App() {
     <div className="dashboard-viewport">
       {/* Top bar: header + metrics */}
       <header className="dashboard-header">
-        <h1>⚙ GAS TOWN</h1>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+          <h1>{'\u2699'} Gas Town</h1>
+          <span style={{ fontSize: 11, color: 'var(--text-dim)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+            Command & Control
+          </span>
+        </div>
         <MetricsBar
           agents={state.agents}
           issues={state.issues}

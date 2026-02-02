@@ -53,6 +53,15 @@ const STATE_COLORS = {
   blocked: 'var(--red)',
 };
 
+const ROLE_COLORS = {
+  mayor: '#c17f24',
+  deacon: '#c17f24',
+  refinery: '#cc6a2e',
+  witness: '#4d9e8a',
+  polecat: '#b5442e',
+  boot: '#8a7d65',
+};
+
 function stateColor(state) {
   return STATE_COLORS[state?.toLowerCase()] || 'var(--yellow)';
 }
@@ -72,13 +81,13 @@ export default function AgentCards({ agents, sessions = [] }) {
         const rig = meta.rig && meta.rig !== 'null' ? meta.rig : null;
         const session = findSession(a.id, sessions);
         const hasSession = !!session;
-        const borderColor = stateColor(state);
+        const roleColor = ROLE_COLORS[role?.toLowerCase()] || stateColor(state);
 
         return (
           <div
             key={a.id}
             className={`agent-card-v2 agent-card-v2--${state?.toLowerCase() || 'idle'}`}
-            style={{ borderLeftColor: borderColor }}
+            style={{ borderLeftColor: roleColor }}
           >
             <div className="agent-card-v2__header">
               <div className="agent-card-v2__name">{shortTitle}</div>

@@ -79,12 +79,20 @@ function renderSteps(data) {
   return (
     <div>
       {steps.map((s, i) => (
-        <div key={i} className="step">
-          <span style={{ color: 'var(--accent)' }}>{s.key}</span>
-          {s.title && <span style={{ color: 'var(--text-bright)', marginLeft: 8 }}>{s.title}</span>}
-          {s.name && <span style={{ color: 'var(--text-bright)', marginLeft: 8 }}>{s.name}</span>}
-          {s.description && <div style={{ color: 'var(--text-dim)', marginLeft: 16 }}>{s.description}</div>}
-          {s.prompt && <div style={{ color: 'var(--text-dim)', marginLeft: 16, fontStyle: 'italic' }}>{String(s.prompt).slice(0, 120)}...</div>}
+        <div key={i} className="step" style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 20, height: 20, borderRadius: '50%', flexShrink: 0,
+            background: 'var(--border-accent)', color: 'var(--bg)',
+            fontSize: 10, fontWeight: 700, marginTop: 1
+          }}>{i + 1}</span>
+          <div>
+            {s.title && <span style={{ color: 'var(--text-bright)' }}>{s.title}</span>}
+            {s.name && !s.title && <span style={{ color: 'var(--text-bright)' }}>{s.name}</span>}
+            {!s.title && !s.name && <span style={{ color: 'var(--accent)' }}>{s.key}</span>}
+            {s.description && <div style={{ color: 'var(--text-dim)' }}>{s.description}</div>}
+            {s.prompt && <div style={{ color: 'var(--text-dim)', fontStyle: 'italic' }}>{String(s.prompt).slice(0, 120)}...</div>}
+          </div>
         </div>
       ))}
     </div>

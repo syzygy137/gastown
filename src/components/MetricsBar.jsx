@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect, useRef } from 'react';
+import Tooltip from './Tooltip.jsx';
 
 function Sparkline({ data, color }) {
   if (!data || data.length < 2) return null;
@@ -52,7 +53,7 @@ function deriveState(agent, sessions) {
   return 'idle';
 }
 
-export default function MetricsBar({ agents, polecats = [], issues, counts, mail, daemon, sessions = [] }) {
+export default function MetricsBar({ agents, polecats = [], issues, counts, mail, daemon, sessions = [], onClickMetric }) {
   const metrics = useMemo(() => {
     const totalAgents = agents.length;
     const activePolecats = agents.filter(a => {
@@ -126,61 +127,81 @@ export default function MetricsBar({ agents, polecats = [], issues, counts, mail
     return flashes[key] ? ` metric-flash-${flashes[key]}` : '';
   }
 
+  const metricItems = [
+    {
+      key: 'agents',
+      number: metrics.totalAgents,
+      color: 'var(--cyan)',
+      label: 'Agents',
+      tab: 'work',
+      tooltip: `Total registered agents (${agents.filter(a => a.status === 'open').length} alive, ${agents.filter(a => a.status !== 'open').length} closed)`,
+      extra: <span className={`health-dot health-${metrics.health}`} />,
+    },
+    {
+      key: 'polecats',
+      number: metrics.activePolecats,
+      color: 'var(--green)',
+      label: 'Active Polecats',
+      tab: 'work',
+      tooltip: 'Polecat agents with status=open (autonomous workers currently available)',
+    },
+    {
+      key: 'pending',
+      number: metrics.pending,
+      color: 'var(--yellow)',
+      label: 'Pending',
+      tab: 'issues',
+      tooltip: 'Issues with status=open, waiting to be picked up',
+    },
+    {
+      key: 'inprogress',
+      number: metrics.inProgress,
+      color: 'var(--accent)',
+      label: 'In Progress',
+      tab: 'issues',
+      tooltip: 'Issues actively being worked on (in_progress + hooked)',
+    },
+    {
+      key: 'merge',
+      number: metrics.mergeQueue,
+      color: 'var(--purple)',
+      label: 'Merge Queue',
+      tab: 'issues',
+      tooltip: 'Merge-request issues waiting for review or merge',
+    },
+    {
+      key: 'mail',
+      number: metrics.mailCount,
+      color: 'var(--orange)',
+      label: 'Mail',
+      tab: 'mail',
+      tooltip: 'Total inter-agent messages in the system',
+    },
+  ];
+
   return (
     <div className="metrics-bar">
-      <div className="metric-card">
-        <div className={`metric-number${flashCls('totalAgents')}`} style={{ color: 'var(--cyan)' }}>
-          {metrics.totalAgents}
-          <span className={`health-dot health-${metrics.health}`} />
+      {metricItems.map(m => (
+        <Tooltip key={m.key} content={m.tooltip}>
+          <div
+            className={`metric-card${onClickMetric ? ' metric-card--clickable' : ''}`}
+            onClick={() => onClickMetric?.(m.tab)}
+          >
+            <div className={`metric-number${flashCls(m.key === 'agents' ? 'totalAgents' : m.key === 'polecats' ? 'activePolecats' : m.key === 'inprogress' ? 'inProgress' : m.key === 'merge' ? 'mergeQueue' : m.key)}`} style={{ color: m.color }}>
+              {m.key === 'polecats' ? metrics.polecatDisplay : m.number}
+              {m.extra || null}
+            </div>
+            <div className="metric-label">{m.label}</div>
+            <Sparkline data={history[m.key === 'agents' ? 'totalAgents' : m.key === 'polecats' ? 'activePolecats' : m.key === 'inprogress' ? 'inProgress' : m.key === 'merge' ? 'mergeQueue' : m.key === 'mail' ? 'mailCount' : m.key]} color={m.color} />
+          </div>
+        </Tooltip>
+      ))}
+      <Tooltip content={`Daemon: ${daemon.running ? 'running' : 'stopped'}. The background process that syncs data.`}>
+        <div className="metric-card">
+          <div className={`daemon-light ${daemon.running ? 'running' : 'stopped'}`} />
+          <div className="metric-label">Daemon</div>
         </div>
-        <div className="metric-label">Agents</div>
-        <Sparkline data={history.totalAgents} color="var(--cyan)" />
-      </div>
-
-      <div className="metric-card">
-        <div className={`metric-number${flashCls('activePolecats')}`} style={{ color: 'var(--green)' }}>
-          {metrics.polecatDisplay}
-        </div>
-        <div className="metric-label">Polecats</div>
-        <Sparkline data={history.activePolecats} color="var(--green)" />
-      </div>
-
-      <div className="metric-card">
-        <div className={`metric-number${flashCls('pending')}`} style={{ color: 'var(--yellow)' }}>
-          {metrics.pending}
-        </div>
-        <div className="metric-label">Pending</div>
-        <Sparkline data={history.pending} color="var(--yellow)" />
-      </div>
-
-      <div className="metric-card">
-        <div className={`metric-number${flashCls('inProgress')}`} style={{ color: 'var(--accent)' }}>
-          {metrics.inProgress}
-        </div>
-        <div className="metric-label">In Progress</div>
-        <Sparkline data={history.inProgress} color="var(--accent)" />
-      </div>
-
-      <div className="metric-card">
-        <div className={`metric-number${flashCls('mergeQueue')}`} style={{ color: 'var(--purple)' }}>
-          {metrics.mergeQueue}
-        </div>
-        <div className="metric-label">Merge Queue</div>
-        <Sparkline data={history.mergeQueue} color="var(--purple)" />
-      </div>
-
-      <div className="metric-card">
-        <div className={`metric-number${flashCls('mailCount')}`} style={{ color: 'var(--orange)' }}>
-          {metrics.mailCount}
-        </div>
-        <div className="metric-label">Mail</div>
-        <Sparkline data={history.mailCount} color="var(--orange)" />
-      </div>
-
-      <div className="metric-card">
-        <div className={`daemon-light ${daemon.running ? 'running' : 'stopped'}`} />
-        <div className="metric-label">Daemon</div>
-      </div>
+      </Tooltip>
     </div>
   );
 }

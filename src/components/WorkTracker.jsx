@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import StatusBadge from './StatusBadge.jsx';
+import Tooltip from './Tooltip.jsx';
+import LinkedText from './LinkedText.jsx';
 
 function relativeTime(isoString) {
   if (!isoString) return null;
@@ -22,7 +24,7 @@ function progressPercent(done, total) {
   return Math.round((done / total) * 100);
 }
 
-export default function WorkTracker({ issues, agents }) {
+export default function WorkTracker({ issues, agents, onDrillIssue, onDrillAgent }) {
   const [filter, setFilter] = useState('all');
 
   // Build convoy map: agents with active hook_beads
@@ -30,7 +32,6 @@ export default function WorkTracker({ issues, agents }) {
   for (const agent of agents) {
     const hookBead = agent.hook_bead || '';
     if (!hookBead) continue;
-    // Find matching issue for the hook bead
     const issue = issues.find(i => i.id === hookBead);
     convoys.push({
       agent,
@@ -82,26 +83,36 @@ export default function WorkTracker({ issues, agents }) {
           </div>
         </div>
         <div className="work-summary__stats">
-          <div className="work-stat">
-            <span className="work-stat__num" style={{ color: 'var(--green)' }}>{openCount}</span>
-            <span className="work-stat__label">Open</span>
-          </div>
-          <div className="work-stat">
-            <span className="work-stat__num" style={{ color: 'var(--yellow)' }}>{activeCount}</span>
-            <span className="work-stat__label">In Progress</span>
-          </div>
-          <div className="work-stat">
-            <span className="work-stat__num" style={{ color: 'var(--red)' }}>{blockedCount}</span>
-            <span className="work-stat__label">Blocked</span>
-          </div>
-          <div className="work-stat">
-            <span className="work-stat__num" style={{ color: 'var(--purple)' }}>{doneCount}</span>
-            <span className="work-stat__label">Done</span>
-          </div>
-          <div className="work-stat">
-            <span className="work-stat__num" style={{ color: 'var(--accent)' }}>{total}</span>
-            <span className="work-stat__label">Total</span>
-          </div>
+          <Tooltip content="Issues with status=open, ready to be worked on">
+            <div className="work-stat">
+              <span className="work-stat__num" style={{ color: 'var(--green)' }}>{openCount}</span>
+              <span className="work-stat__label">Open</span>
+            </div>
+          </Tooltip>
+          <Tooltip content="Issues actively being worked on by agents">
+            <div className="work-stat">
+              <span className="work-stat__num" style={{ color: 'var(--yellow)' }}>{activeCount}</span>
+              <span className="work-stat__label">In Progress</span>
+            </div>
+          </Tooltip>
+          <Tooltip content="Issues waiting on dependencies or external input">
+            <div className="work-stat">
+              <span className="work-stat__num" style={{ color: 'var(--red)' }}>{blockedCount}</span>
+              <span className="work-stat__label">Blocked</span>
+            </div>
+          </Tooltip>
+          <Tooltip content="Issues that have been completed and closed">
+            <div className="work-stat">
+              <span className="work-stat__num" style={{ color: 'var(--purple)' }}>{doneCount}</span>
+              <span className="work-stat__label">Done</span>
+            </div>
+          </Tooltip>
+          <Tooltip content="Total work items (excluding agent and message issues)">
+            <div className="work-stat">
+              <span className="work-stat__num" style={{ color: 'var(--accent)' }}>{total}</span>
+              <span className="work-stat__label">Total</span>
+            </div>
+          </Tooltip>
         </div>
       </div>
 
@@ -113,31 +124,55 @@ export default function WorkTracker({ issues, agents }) {
             <span className="badge badge-convoy">{convoys.length}</span>
           </div>
           <div className="work-convoy-grid">
-            {convoys.map(c => (
-              <div key={c.agent.id} className={`work-convoy-card work-convoy-card--${c.state}`}>
-                <div className="work-convoy-card__header">
-                  <span className="work-convoy-card__agent">{(c.agent.title || c.agent.id).split(' - ')[0]}</span>
-                  <StatusBadge value={c.state} />
-                </div>
-                <div className="work-convoy-card__bead">
-                  {c.hookBead}
-                </div>
-                {c.issue && (
-                  <div className="work-convoy-card__title">
-                    {c.issue.title || c.issue.id}
+            {convoys.map(c => {
+              const tooltipContent = c.issue
+                ? `${c.agent.title || c.agent.id}\nWorking on: ${c.hookBead}\n${c.issue.title || ''}\nStatus: ${c.issue.status || 'unknown'}`
+                : `${c.agent.title || c.agent.id}\nHooked to: ${c.hookBead}`;
+              return (
+                <Tooltip key={c.agent.id} content={tooltipContent}>
+                  <div
+                    className={`work-convoy-card work-convoy-card--${c.state}`}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => c.issue && onDrillIssue?.(c.hookBead)}
+                  >
+                    <div className="work-convoy-card__header">
+                      <span
+                        className="work-convoy-card__agent cross-link cross-link--agent"
+                        onClick={e => {
+                          e.stopPropagation();
+                          onDrillAgent?.((c.agent.title || c.agent.id).split(' - ')[0]);
+                        }}
+                      >
+                        {(c.agent.title || c.agent.id).split(' - ')[0]}
+                      </span>
+                      <StatusBadge value={c.state} />
+                    </div>
+                    <div className="work-convoy-card__bead">
+                      <span
+                        className="cross-link cross-link--issue"
+                        onClick={e => { e.stopPropagation(); onDrillIssue?.(c.hookBead); }}
+                      >
+                        {c.hookBead}
+                      </span>
+                    </div>
+                    {c.issue && (
+                      <div className="work-convoy-card__title">
+                        {c.issue.title || c.issue.id}
+                      </div>
+                    )}
+                    {c.issue && (
+                      <div className="work-convoy-card__meta">
+                        <StatusBadge value={c.issue.status} />
+                        {c.issue.rig && <span className="work-convoy-card__rig">{c.issue.rig}</span>}
+                      </div>
+                    )}
+                    <div className="work-convoy-card__time">
+                      {relativeTime(c.agent.updated_at)}
+                    </div>
                   </div>
-                )}
-                {c.issue && (
-                  <div className="work-convoy-card__meta">
-                    <StatusBadge value={c.issue.status} />
-                    {c.issue.rig && <span className="work-convoy-card__rig">{c.issue.rig}</span>}
-                  </div>
-                )}
-                <div className="work-convoy-card__time">
-                  {relativeTime(c.agent.updated_at)}
-                </div>
-              </div>
-            ))}
+                </Tooltip>
+              );
+            })}
           </div>
         </div>
       )}
@@ -171,7 +206,12 @@ export default function WorkTracker({ issues, agents }) {
           {filtered.map(item => {
             const s = (item.status || 'open').toLowerCase().replace('_', '-');
             return (
-              <div key={item.id} className={`work-item-row work-item-row--${s}`}>
+              <div
+                key={item.id}
+                className={`work-item-row work-item-row--${s}`}
+                style={{ cursor: 'pointer' }}
+                onClick={() => onDrillIssue?.(item.id)}
+              >
                 <div className="work-item-row__status">
                   <StatusBadge value={item.status || 'open'} />
                 </div>
@@ -179,7 +219,14 @@ export default function WorkTracker({ issues, agents }) {
                   <div className="work-item-row__title">{item.title || item.id}</div>
                   <div className="work-item-row__meta">
                     <span className="work-item-row__id">{item.id}</span>
-                    {item.assignee && <span className="work-item-row__assignee">{item.assignee}</span>}
+                    {item.assignee && (
+                      <span
+                        className="work-item-row__assignee cross-link cross-link--agent"
+                        onClick={e => { e.stopPropagation(); onDrillAgent?.(item.assignee); }}
+                      >
+                        {item.assignee}
+                      </span>
+                    )}
                     {item.rig && item.rig !== 'town' && <span className="work-item-row__rig">{item.rig}</span>}
                     {item.issue_type && <StatusBadge value={item.issue_type} />}
                   </div>

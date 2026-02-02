@@ -1,4 +1,6 @@
 import React, { useState, useMemo } from 'react';
+import Tooltip from './Tooltip.jsx';
+import LinkedText from './LinkedText.jsx';
 
 const ROLE_COLORS = {
   mayor: '#d29922',
@@ -15,7 +17,6 @@ function getAvatarColor(name) {
   for (const [role, color] of Object.entries(ROLE_COLORS)) {
     if (lower.includes(role)) return color;
   }
-  // Stable hash fallback
   const colors = Object.values(ROLE_COLORS);
   let hash = 0;
   for (let i = 0; i < name.length; i++) hash = (hash * 31 + name.charCodeAt(i)) | 0;
@@ -70,42 +71,69 @@ function groupByThread(mail) {
   return order.map(key => ({ key, messages: threads.get(key) }));
 }
 
-function MailItem({ m, isReply }) {
+function MailItem({ m, isReply, onDrillAgent, onDrillIssue }) {
   const [expanded, setExpanded] = useState(false);
   const recent = isRecent(m.created_at);
   const hasLongDesc = m.description && m.description.length > 200;
+  const tooltipText = m.description && !expanded
+    ? m.description.slice(0, 300) + (m.description.length > 300 ? '...' : '')
+    : null;
 
   return (
-    <div
-      className={`mail-item${recent ? ' mail-unread' : ''}${isReply ? ' mail-reply' : ''}`}
-      onClick={() => hasLongDesc && setExpanded(!expanded)}
-      style={hasLongDesc ? { cursor: 'pointer' } : undefined}
-    >
-      <div className="mail-item-row">
-        <span
-          className="mail-avatar"
-          style={{ background: getAvatarColor(m.assignee) }}
-        >
-          {(m.assignee || '?')[0].toUpperCase()}
-        </span>
-        <div className="mail-item-content">
-          <div className={`mail-subject${recent ? ' mail-subject-unread' : ''}`}>
-            {m.title || '(no subject)'}
-          </div>
-          <div className="mail-meta">
-            {m.assignee && <span className="mail-from">{m.assignee}</span>}
-            {m.assignee && m.target && <span className="mail-arrow">&rarr;</span>}
-            {m.target && <span className="mail-to">{m.target}</span>}
-            <span className="mail-time">{relativeTime(m.created_at)}</span>
+    <Tooltip content={tooltipText} delay={400}>
+      <div
+        className={`mail-item${recent ? ' mail-unread' : ''}${isReply ? ' mail-reply' : ''}`}
+        onClick={() => setExpanded(!expanded)}
+        style={{ cursor: 'pointer' }}
+      >
+        <div className="mail-item-row">
+          <span
+            className="mail-avatar"
+            style={{ background: getAvatarColor(m.assignee) }}
+          >
+            {(m.assignee || '?')[0].toUpperCase()}
+          </span>
+          <div className="mail-item-content">
+            <div className={`mail-subject${recent ? ' mail-subject-unread' : ''}`}>
+              {m.title || '(no subject)'}
+            </div>
+            <div className="mail-meta">
+              {m.assignee && (
+                <span
+                  className="mail-from cross-link cross-link--agent"
+                  onClick={e => { e.stopPropagation(); onDrillAgent?.(m.assignee); }}
+                >
+                  {m.assignee}
+                </span>
+              )}
+              {m.assignee && m.target && <span className="mail-arrow">&rarr;</span>}
+              {m.target && (
+                <span
+                  className="mail-to cross-link cross-link--agent"
+                  onClick={e => { e.stopPropagation(); onDrillAgent?.(m.target); }}
+                >
+                  {m.target}
+                </span>
+              )}
+              <span className="mail-time">{relativeTime(m.created_at)}</span>
+            </div>
           </div>
         </div>
+        {m.description && (
+          <div className={`mail-desc${expanded ? ' mail-desc-expanded' : ''}`}>
+            {expanded ? (
+              <LinkedText
+                text={m.description}
+                onClickIssue={onDrillIssue}
+                onClickAgent={onDrillAgent}
+              />
+            ) : (
+              `${m.description.slice(0, 200)}${hasLongDesc ? '...' : ''}`
+            )}
+          </div>
+        )}
       </div>
-      {m.description && (
-        <div className={`mail-desc${expanded ? ' mail-desc-expanded' : ''}`}>
-          {expanded ? m.description : `${m.description.slice(0, 200)}${hasLongDesc ? '...' : ''}`}
-        </div>
-      )}
-    </div>
+    </Tooltip>
   );
 }
 
@@ -184,7 +212,7 @@ function ComposeForm({ agents, onClose }) {
   );
 }
 
-export default function MailFeed({ mail, agents = [] }) {
+export default function MailFeed({ mail, agents = [], onDrillAgent, onDrillIssue }) {
   const [composing, setComposing] = useState(false);
   const threads = useMemo(() => groupByThread(mail), [mail]);
 
@@ -211,7 +239,13 @@ export default function MailFeed({ mail, agents = [] }) {
               <div className="mail-thread-badge">{thread.messages.length} messages</div>
             )}
             {thread.messages.map((m, i) => (
-              <MailItem key={m.id} m={m} isReply={i > 0} />
+              <MailItem
+                key={m.id}
+                m={m}
+                isReply={i > 0}
+                onDrillAgent={onDrillAgent}
+                onDrillIssue={onDrillIssue}
+              />
             ))}
           </div>
         ))}

@@ -1,5 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import StatusBadge from './StatusBadge.jsx';
+import Tooltip from './Tooltip.jsx';
+import LinkedText from './LinkedText.jsx';
 
 const COLUMNS = [
   { key: 'open', label: 'Open' },
@@ -110,10 +112,9 @@ function parseAgentMeta(desc) {
   return meta;
 }
 
-export default function IssueBoard({ issues, dependencies = [], agents = [], polecats = [] }) {
+export default function IssueBoard({ issues, dependencies = [], agents = [], polecats = [], focusIssueId, onClearFocus, onDrillAgent, onDrillIssue }) {
   const [expanded, setExpanded] = useState(new Set());
 
-  // Build a map of issue_id → agent name for hooked issues
   const hookMap = useMemo(() => {
     const m = {};
     for (const agent of agents) {
@@ -124,9 +125,22 @@ export default function IssueBoard({ issues, dependencies = [], agents = [], pol
         m[hookBead] = name;
       }
     }
-    // Also check issue assignees — if assignee matches a polecat path, use polecat name
     return m;
   }, [agents]);
+
+  useEffect(() => {
+    if (focusIssueId) {
+      setExpanded(prev => {
+        const next = new Set(prev);
+        next.add(focusIssueId);
+        return next;
+      });
+      setTimeout(() => {
+        const el = document.querySelector(`[data-issue-id="${focusIssueId}"]`);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 100);
+    }
+  }, [focusIssueId]);
 
   const depsMap = useMemo(() => {
     const m = {};
@@ -168,78 +182,117 @@ export default function IssueBoard({ issues, dependencies = [], agents = [], pol
             const isExpanded = expanded.has(issue.id);
             const pClass = PRIORITY_CLASSES[issue.priority] || '';
             const deps = depsMap[issue.id];
+            const tooltipText = issue.description
+              ? issue.description.slice(0, 200) + (issue.description.length > 200 ? '...' : '')
+              : null;
             return (
-              <div
-                key={issue.id}
-                className={`issue-card${isExpanded ? ' issue-card--expanded' : ''}`}
-                onClick={() => toggle(issue.id)}
-              >
-                <div className="issue-card__header">
-                  <span className="issue-id">{issue.id}</span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                    {issue.priority != null && (
-                      <span className={`issue-priority ${pClass}`}>P{issue.priority}</span>
-                    )}
-                    <SlingButton issueId={issue.id} />
-                  </span>
-                </div>
-                <div className="issue-title">{issue.title || issue.id}</div>
-                <div className="issue-meta">
-                  <StatusBadge value={issue.issue_type} />
-                  <StatusBadge value={issue.status} />
-                  {issue.assignee && <span className="issue-assignee">{issue.assignee}</span>}
-                  {hookMap[issue.id] && (
-                    <span className="issue-hook-tag" title={`Hooked by ${hookMap[issue.id]}`}>
-                      on {hookMap[issue.id]}'s hook
+              <Tooltip key={issue.id} content={tooltipText} delay={400}>
+                <div
+                  data-issue-id={issue.id}
+                  className={`issue-card${isExpanded ? ' issue-card--expanded' : ''}${issue.id === focusIssueId ? ' issue-card--focused' : ''}`}
+                  onClick={() => toggle(issue.id)}
+                >
+                  <div className="issue-card__header">
+                    <span
+                      className="issue-id cross-link cross-link--issue"
+                      onClick={e => { e.stopPropagation(); onDrillIssue?.(issue.id); }}
+                    >
+                      {issue.id}
                     </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                      {issue.priority != null && (
+                        <span className={`issue-priority ${pClass}`}>P{issue.priority}</span>
+                      )}
+                      <SlingButton issueId={issue.id} />
+                    </span>
+                  </div>
+                  <div className="issue-title">{issue.title || issue.id}</div>
+                  <div className="issue-meta">
+                    <StatusBadge value={issue.issue_type} />
+                    <StatusBadge value={issue.status} />
+                    {issue.assignee && (
+                      <span
+                        className="issue-assignee cross-link cross-link--agent"
+                        onClick={e => { e.stopPropagation(); onDrillAgent?.(issue.assignee); }}
+                      >
+                        {issue.assignee}
+                      </span>
+                    )}
+                    {hookMap[issue.id] && (
+                      <span className="issue-hook-tag" title={`Hooked by ${hookMap[issue.id]}`}>
+                        on {hookMap[issue.id]}'s hook
+                      </span>
+                    )}
+                  </div>
+                  {isExpanded && (
+                    <div className="issue-expanded">
+                      {issue.description && (
+                        <div className="issue-description">
+                          <LinkedText
+                            text={issue.description}
+                            onClickIssue={onDrillIssue}
+                            onClickAgent={onDrillAgent}
+                          />
+                        </div>
+                      )}
+                      <div className="issue-detail-grid">
+                        {issue.rig && (
+                          <div className="issue-detail-row">
+                            <span className="issue-detail-label">Rig</span>
+                            <span className="issue-detail-value">{issue.rig}</span>
+                          </div>
+                        )}
+                        {issue.owner && (
+                          <div className="issue-detail-row">
+                            <span className="issue-detail-label">Owner</span>
+                            <span className="issue-detail-value">
+                              <LinkedText text={issue.owner} onClickAgent={onDrillAgent} onClickIssue={onDrillIssue} />
+                            </span>
+                          </div>
+                        )}
+                        {issue.assignee && (
+                          <div className="issue-detail-row">
+                            <span className="issue-detail-label">Assignee</span>
+                            <span className="issue-detail-value">
+                              <LinkedText text={issue.assignee} onClickAgent={onDrillAgent} onClickIssue={onDrillIssue} />
+                            </span>
+                          </div>
+                        )}
+                        {deps && deps.length > 0 && (
+                          <div className="issue-detail-row">
+                            <span className="issue-detail-label">Deps</span>
+                            <span className="issue-detail-value">
+                              {deps.map((d, i) => (
+                                <span key={d}>
+                                  {i > 0 && ', '}
+                                  <span
+                                    className="cross-link cross-link--issue"
+                                    onClick={e => { e.stopPropagation(); onDrillIssue?.(d); }}
+                                  >
+                                    {d}
+                                  </span>
+                                </span>
+                              ))}
+                            </span>
+                          </div>
+                        )}
+                        {issue.created_at && (
+                          <div className="issue-detail-row">
+                            <span className="issue-detail-label">Created</span>
+                            <span className="issue-detail-value">{timeAgo(issue.created_at)}</span>
+                          </div>
+                        )}
+                        {issue.updated_at && (
+                          <div className="issue-detail-row">
+                            <span className="issue-detail-label">Updated</span>
+                            <span className="issue-detail-value">{timeAgo(issue.updated_at)}</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   )}
                 </div>
-                {isExpanded && (
-                  <div className="issue-expanded">
-                    {issue.description && (
-                      <div className="issue-description">{issue.description}</div>
-                    )}
-                    <div className="issue-detail-grid">
-                      {issue.rig && (
-                        <div className="issue-detail-row">
-                          <span className="issue-detail-label">Rig</span>
-                          <span className="issue-detail-value">{issue.rig}</span>
-                        </div>
-                      )}
-                      {issue.owner && (
-                        <div className="issue-detail-row">
-                          <span className="issue-detail-label">Owner</span>
-                          <span className="issue-detail-value">{issue.owner}</span>
-                        </div>
-                      )}
-                      {issue.assignee && (
-                        <div className="issue-detail-row">
-                          <span className="issue-detail-label">Assignee</span>
-                          <span className="issue-detail-value">{issue.assignee}</span>
-                        </div>
-                      )}
-                      {deps && deps.length > 0 && (
-                        <div className="issue-detail-row">
-                          <span className="issue-detail-label">Deps</span>
-                          <span className="issue-detail-value">{deps.join(', ')}</span>
-                        </div>
-                      )}
-                      {issue.created_at && (
-                        <div className="issue-detail-row">
-                          <span className="issue-detail-label">Created</span>
-                          <span className="issue-detail-value">{timeAgo(issue.created_at)}</span>
-                        </div>
-                      )}
-                      {issue.updated_at && (
-                        <div className="issue-detail-row">
-                          <span className="issue-detail-label">Updated</span>
-                          <span className="issue-detail-value">{timeAgo(issue.updated_at)}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              </Tooltip>
             );
           })}
           {grouped[col.key].length === 0 && (

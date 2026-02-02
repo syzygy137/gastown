@@ -2921,3 +2921,124 @@ body {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ── Tooltip ── */
+.tooltip-wrapper {
+  display: inline-flex;
+  position: relative;
+}
+.tooltip-box {
+  position: fixed;
+  z-index: 9999;
+  padding: 8px 12px;
+  background: #1a1410;
+  border: 1px solid var(--border-accent);
+  border-radius: 4px;
+  color: var(--text);
+  font-size: 11px;
+  line-height: 1.5;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5), var(--brass-glow);
+  pointer-events: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.tooltip-arrow {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #1a1410;
+  border-right: 1px solid var(--border-accent);
+  border-bottom: 1px solid var(--border-accent);
+  left: 50%;
+  margin-left: -4px;
+}
+.tooltip-box--above .tooltip-arrow {
+  bottom: -5px;
+  transform: rotate(45deg);
+}
+.tooltip-box--below .tooltip-arrow {
+  top: -5px;
+  transform: rotate(-135deg);
+}
+.tooltip-box .tooltip-label {
+  color: var(--text-dim);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.tooltip-box .tooltip-value {
+  color: var(--text-bright);
+}
+
+/* ── Breadcrumb / Context Bar ── */
+.breadcrumb-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px;
+  background: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  font-size: 11px;
+  color: var(--text-dim);
+  min-height: 28px;
+}
+.breadcrumb-back {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text-dim);
+  padding: 2px 8px;
+  cursor: pointer;
+  font-size: 10px;
+  transition: all 0.15s;
+}
+.breadcrumb-back:hover {
+  border-color: var(--border-accent);
+  color: var(--text);
+}
+.breadcrumb-path {
+  color: var(--text);
+}
+.breadcrumb-sep {
+  color: var(--text-dim);
+  margin: 0 2px;
+}
+
+/* ── Cross-links ── */
+.cross-link {
+  cursor: pointer;
+  border-bottom: 1px dotted;
+  transition: all 0.15s;
+}
+.cross-link--issue {
+  color: var(--accent);
+  border-bottom-color: rgba(193,127,36,0.4);
+}
+.cross-link--issue:hover {
+  color: var(--text-bright);
+  border-bottom-color: var(--accent);
+}
+.cross-link--agent {
+  color: var(--cyan);
+  border-bottom-color: rgba(77,158,138,0.4);
+}
+.cross-link--agent:hover {
+  color: var(--text-bright);
+  border-bottom-color: var(--cyan);
+}
+
+/* ── Metric card clickable ── */
+.metric-card--clickable {
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.metric-card--clickable:hover {
+  background: var(--bg-hover);
+  box-shadow: var(--lamp-glow);
+}
+
+/* ── Focused issue card ── */
+.issue-card--focused {
+  border-color: var(--border-accent);
+  box-shadow: var(--brass-glow), 0 0 0 1px var(--border-accent);
+}

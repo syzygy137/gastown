@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import StatusBadge from './StatusBadge.jsx';
+import Tooltip from './Tooltip.jsx';
 
 function parseAgentMeta(desc) {
   if (!desc) return {};
@@ -94,33 +95,35 @@ function stateColor(state) {
   return STATE_COLORS[state?.toLowerCase()] || 'var(--yellow)';
 }
 
+function AgentTooltipContent({ agent, meta, session, role, state, hookBead, lastActivity, rig }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+      <div><span className="tooltip-label">ID: </span><span className="tooltip-value">{agent.id}</span></div>
+      {session && <div><span className="tooltip-label">Session: </span><span className="tooltip-value">{session.name}</span></div>}
+      {role && <div><span className="tooltip-label">Role: </span><span className="tooltip-value">{role}</span></div>}
+      <div><span className="tooltip-label">State: </span><span className="tooltip-value">{state}</span></div>
+      {hookBead && <div><span className="tooltip-label">Hook: </span><span className="tooltip-value">{hookBead}</span></div>}
+      {rig && <div><span className="tooltip-label">Rig: </span><span className="tooltip-value">{rig}</span></div>}
+      {lastActivity && <div><span className="tooltip-label">Last active: </span><span className="tooltip-value">{relativeTime(lastActivity)}</span></div>}
+    </div>
+  );
+}
+
 export default function AgentCards({ agents, polecats = [], sessions = [], onSelectAgent }) {
-  // Merge polecats into agent list — polecats that aren't already in agents get synthetic entries
   const allAgents = useMemo(() => {
     const agentIds = new Set(agents.map(a => a.id));
     const merged = [...agents];
-
     for (const pc of polecats) {
       const sessionId = `gt-${pc.rig}-${pc.name}`;
-      // Check if this polecat already exists as a DB agent
       if (!agentIds.has(sessionId) && !agentIds.has(`${pc.rig}-${pc.name}`)) {
         merged.push({
-          id: sessionId,
-          title: pc.name,
-          role_type: 'polecat',
-          agent_state: pc.state || 'idle',
-          hook_bead: '',
-          status: 'open',
-          description: '',
-          rig: pc.rig,
-          created_at: '',
-          updated_at: '',
-          _fromPolecat: true,
-          _sessionRunning: pc.session_running,
+          id: sessionId, title: pc.name, role_type: 'polecat',
+          agent_state: pc.state || 'idle', hook_bead: '', status: 'open',
+          description: '', rig: pc.rig, created_at: '', updated_at: '',
+          _fromPolecat: true, _sessionRunning: pc.session_running,
         });
       }
     }
-
     return merged;
   }, [agents, polecats]);
 
@@ -149,58 +152,68 @@ export default function AgentCards({ agents, polecats = [], sessions = [], onSel
           : 10 + ((a.id.charCodeAt(0) || 0) % 15);
 
         return (
-          <div
+          <Tooltip
             key={a.id}
-            className={`agent-card-v2 agent-card-v2--${state?.toLowerCase() || 'idle'}${hasSession ? ' agent-card-v2--clickable' : ''}${isWorkingPolecat ? ' agent-card-v2--barber-pole' : ''}`}
-            style={{ borderLeftColor: roleColor }}
-            onClick={() => hasSession && onSelectAgent?.(getSessionName(a.id))}
-          >
-            <div className="agent-card-v2__header">
-              <div className="agent-card-v2__name">{shortTitle}</div>
-              <span
-                className={`role-icon role-icon--${roleLower || 'boot'}${isActive ? ' role-icon--active' : ''}`}
-                title={`${role || 'agent'}${hasSession ? ' (live)' : ' (no session)'}`}
-              >
-                {ROLE_ICONS[roleLower] || '\u2699'}
-              </span>
-            </div>
-
-            <div className="agent-card-v2__badges">
-              {role && <StatusBadge value={role} />}
-              <StatusBadge value={derivedState} />
-            </div>
-
-            {rig && (
-              <div className="agent-card-v2__rig">
-                Rig: {rig}
-              </div>
-            )}
-
-            {hookBead && (
-              <div className="agent-card-v2__hook">
-                Working on: {hookBead}
-              </div>
-            )}
-
-            <div className="agent-card-v2__footer">
-              <span className="agent-card-v2__id">{a.id}</span>
-              <span className="agent-card-v2__activity">
-                {session && (
-                  <span className="agent-card-v2__session-icon" title={session.attached ? 'Attached' : 'Detached'}>
-                    &#9618;{session.attached ? '+' : ''}
-                  </span>
-                )}
-                {relativeTime(lastActivity)}
-              </span>
-            </div>
-
-            <div className="agent-xp-bar">
-              <div
-                className={`agent-xp-bar__fill${isActive ? ' agent-xp-bar__fill--active' : ''}`}
-                style={{ width: `${progressPct}%` }}
+            content={
+              <AgentTooltipContent
+                agent={a} meta={meta} session={session}
+                role={role} state={state} hookBead={hookBead}
+                lastActivity={lastActivity} rig={rig}
               />
+            }
+          >
+            <div
+              className={`agent-card-v2 agent-card-v2--${state?.toLowerCase() || 'idle'}${hasSession ? ' agent-card-v2--clickable' : ''}${isWorkingPolecat ? ' agent-card-v2--barber-pole' : ''}`}
+              style={{ borderLeftColor: roleColor }}
+              onClick={() => hasSession && onSelectAgent?.(getSessionName(a.id))}
+            >
+              <div className="agent-card-v2__header">
+                <div className="agent-card-v2__name">{shortTitle}</div>
+                <span
+                  className={`role-icon role-icon--${roleLower || 'boot'}${isActive ? ' role-icon--active' : ''}`}
+                  title={`${role || 'agent'}${hasSession ? ' (live)' : ' (no session)'}`}
+                >
+                  {ROLE_ICONS[roleLower] || '\u2699'}
+                </span>
+              </div>
+
+              <div className="agent-card-v2__badges">
+                {role && <StatusBadge value={role} />}
+                <StatusBadge value={state} />
+              </div>
+
+              {rig && (
+                <div className="agent-card-v2__rig">
+                  Rig: {rig}
+                </div>
+              )}
+
+              {hookBead && (
+                <div className="agent-card-v2__hook">
+                  Working on: {hookBead}
+                </div>
+              )}
+
+              <div className="agent-card-v2__footer">
+                <span className="agent-card-v2__id">{a.id}</span>
+                <span className="agent-card-v2__activity">
+                  {hasSession && (
+                    <span className="agent-card-v2__session-icon" title={session?.attached ? 'Attached' : 'Detached'}>
+                      &#9618;{session?.attached ? '+' : ''}
+                    </span>
+                  )}
+                  {relativeTime(lastActivity)}
+                </span>
+              </div>
+
+              <div className="agent-xp-bar">
+                <div
+                  className={`agent-xp-bar__fill${isActive ? ' agent-xp-bar__fill--active' : ''}`}
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
             </div>
-          </div>
+          </Tooltip>
         );
       })}
     </div>

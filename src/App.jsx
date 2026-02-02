@@ -81,11 +81,26 @@ const TABS = [
   { id: 'overview', label: 'Map' },
 ];
 
+// Convert agent path name (gastown/witness) to session name (gt-gastown-witness)
+function agentPathToSession(name) {
+  if (!name) return null;
+  const parts = name.split('/');
+  if (parts.length === 2) {
+    const [town, role] = parts;
+    if (town === 'gastown') return `gt-gastown-${role}`;
+    if (town === 'slop') return `gt-slop-${role}`;
+    return `${town}-${role}`;
+  }
+  return name;
+}
+
 export default function App() {
   const [state, dispatch] = useReducer(reducer, initial);
   const [activeTab, setActiveTab] = useState('work');
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [breadcrumbs, setBreadcrumbs] = useState([]); // [{label, action}]
+  const [focusIssueId, setFocusIssueId] = useState(null);
   const wsRef = useRef(null);
   const retryRef = useRef(null);
   const addToast = useToast();
@@ -181,6 +196,47 @@ export default function App() {
     };
   }, [connect]);
 
+  // Drill-down: open issue detail (switch to Issues tab and expand)
+  const drillIssue = useCallback((issueId) => {
+    setBreadcrumbs(prev => [...prev, { label: `Issue ${issueId}`, tab: activeTab }]);
+    setActiveTab('issues');
+    setFocusIssueId(issueId);
+  }, [activeTab]);
+
+  // Drill-down: open agent detail
+  const drillAgent = useCallback((agentNameOrSession) => {
+    // Try to resolve to a session name
+    let session = agentNameOrSession;
+    if (agentNameOrSession.includes('/')) {
+      session = agentPathToSession(agentNameOrSession);
+    }
+    setBreadcrumbs(prev => [...prev, { label: agentNameOrSession, tab: activeTab }]);
+    setSelectedAgent(session);
+  }, [activeTab]);
+
+  // Drill-down: click metric to switch tab
+  const drillMetric = useCallback((metricTab) => {
+    setBreadcrumbs(prev => [...prev, { label: metricTab, tab: activeTab }]);
+    setActiveTab(metricTab);
+  }, [activeTab]);
+
+  // Breadcrumb: go back
+  const breadcrumbBack = useCallback(() => {
+    setBreadcrumbs(prev => {
+      if (prev.length === 0) return prev;
+      const last = prev[prev.length - 1];
+      if (last.tab) setActiveTab(last.tab);
+      setSelectedAgent(null);
+      setFocusIssueId(null);
+      return prev.slice(0, -1);
+    });
+  }, []);
+
+  const clearBreadcrumbs = useCallback(() => {
+    setBreadcrumbs([]);
+    setFocusIssueId(null);
+  }, []);
+
   // Global keyboard shortcuts
   useEffect(() => {
     function handleGlobalKey(e) {
@@ -194,10 +250,11 @@ export default function App() {
         return;
       }
 
-      // Escape — close palette or agent detail
+      // Escape — close palette, agent detail, or breadcrumbs
       if (e.key === 'Escape') {
         if (paletteOpen) { setPaletteOpen(false); return; }
         if (selectedAgent) { setSelectedAgent(null); return; }
+        if (breadcrumbs.length > 0) { breadcrumbBack(); return; }
         return;
       }
 
@@ -209,6 +266,7 @@ export default function App() {
       if (num >= 1 && num <= TABS.length) {
         e.preventDefault();
         setActiveTab(TABS[num - 1].id);
+        clearBreadcrumbs();
         return;
       }
 
@@ -233,7 +291,7 @@ export default function App() {
 
     window.addEventListener('keydown', handleGlobalKey);
     return () => window.removeEventListener('keydown', handleGlobalKey);
-  }, [paletteOpen, selectedAgent]);
+  }, [paletteOpen, selectedAgent, breadcrumbs, breadcrumbBack, clearBreadcrumbs]);
 
   const tabBadge = (id) => {
     switch (id) {
@@ -258,6 +316,11 @@ export default function App() {
     }
   };
 
+  const handleTabClick = (tabId) => {
+    setActiveTab(tabId);
+    clearBreadcrumbs();
+  };
+
   return (
     <div className="dashboard-viewport">
       {/* Top bar: header + metrics */}
@@ -276,6 +339,7 @@ export default function App() {
           mail={state.mail}
           daemon={state.daemon}
           sessions={state.sessions}
+          onClickMetric={drillMetric}
         />
         <button className="palette-trigger" onClick={() => setPaletteOpen(true)}>
           {'\u2315'} Search
@@ -286,6 +350,21 @@ export default function App() {
           {state.connected ? 'Live' : 'Reconnecting...'}
         </div>
       </header>
+
+      {/* Breadcrumb context bar — only when drilled in */}
+      {breadcrumbs.length > 0 && (
+        <div className="breadcrumb-bar">
+          <button className="breadcrumb-back" onClick={breadcrumbBack}>{'\u2190'} Back</button>
+          <span className="breadcrumb-path">
+            Viewing: {breadcrumbs.map((b, i) => (
+              <span key={i}>
+                {i > 0 && <span className="breadcrumb-sep">{'\u203A'}</span>}
+                {b.label}
+              </span>
+            ))}
+          </span>
+        </div>
+      )}
 
       {/* Primary view: live terminal grid */}
       <div className="live-terminals-area">
@@ -310,12 +389,37 @@ export default function App() {
           ))}
         </div>
         <div className="tab-content" key={activeTab}>
-          {activeTab === 'work' && <WorkTracker issues={state.issues} agents={state.agents} />}
+          {activeTab === 'work' && (
+            <WorkTracker
+              issues={state.issues}
+              agents={state.agents}
+              onDrillIssue={drillIssue}
+              onDrillAgent={drillAgent}
+            />
+          )}
           {activeTab === 'agents' && <AgentCards agents={state.agents} polecats={state.polecats} sessions={state.sessions} onSelectAgent={setSelectedAgent} />}
           {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
-          {activeTab === 'issues' && <IssueBoard issues={state.issues} dependencies={state.dependencies} agents={state.agents} polecats={state.polecats} />}
+          {activeTab === 'issues' && (
+            <IssueBoard
+              issues={state.issues}
+              dependencies={state.dependencies}
+              agents={state.agents}
+              polecats={state.polecats}
+              focusIssueId={focusIssueId}
+              onClearFocus={() => setFocusIssueId(null)}
+              onDrillAgent={drillAgent}
+              onDrillIssue={drillIssue}
+            />
+          )}
           {activeTab === 'merge-queue' && <MergeQueue issues={state.issues} events={state.events} />}
-          {activeTab === 'mail' && <MailFeed mail={state.mail} agents={state.agents} />}
+          {activeTab === 'mail' && (
+            <MailFeed
+              mail={state.mail}
+              agents={state.agents}
+              onDrillAgent={drillAgent}
+              onDrillIssue={drillIssue}
+            />
+          )}
           {activeTab === 'events' && <EventTimeline events={state.events} />}
           {activeTab === 'formulas' && <FormulaBrowser formulas={state.formulas} />}
           {activeTab === 'controls' && <Controls daemon={state.daemon} agents={state.agents} />}

@@ -47,11 +47,25 @@ function findSession(agentId, sessions) {
 
 const STATE_COLORS = {
   active: 'var(--green)',
+  working: 'var(--green)',
   'in-progress': 'var(--green)',
   'in_progress': 'var(--green)',
   idle: 'var(--yellow)',
   blocked: 'var(--red)',
+  offline: 'var(--red)',
+  spawning: 'var(--yellow)',
 };
+
+function deriveState(agent, sessions) {
+  const session = findSession(agent.id, sessions);
+  const hasSession = !!session;
+  const meta = parseAgentMeta(agent.description);
+  const hookBead = agent.hook_bead || meta.hook_bead;
+
+  if (!hasSession) return 'offline';
+  if (hookBead && hookBead !== 'null' && hookBead !== '') return 'working';
+  return 'idle';
+}
 
 const ROLE_COLORS = {
   mayor: '#c17f24',
@@ -74,7 +88,7 @@ export default function AgentCards({ agents, sessions = [], onSelectAgent }) {
       {agents.map(a => {
         const meta = parseAgentMeta(a.description);
         const role = a.role_type || meta.role_type || '';
-        const state = a.agent_state || meta.agent_state || 'idle';
+        const state = deriveState(a, sessions);
         const shortTitle = (a.title || a.id).split(' - ')[0].split(' (')[0];
         const hookBead = meta.hook_bead || a.hook_bead || null;
         const lastActivity = meta.last_activity || a.last_activity || a.updated_at || null;
@@ -93,8 +107,8 @@ export default function AgentCards({ agents, sessions = [], onSelectAgent }) {
             <div className="agent-card-v2__header">
               <div className="agent-card-v2__name">{shortTitle}</div>
               <span
-                className={`agent-card-v2__dot ${hasSession ? 'agent-card-v2__dot--live' : 'agent-card-v2__dot--dead'}`}
-                title={hasSession ? 'Session running' : 'No session'}
+                className={`agent-card-v2__dot ${state === 'working' ? 'agent-card-v2__dot--working' : state === 'idle' ? 'agent-card-v2__dot--idle' : 'agent-card-v2__dot--dead'}`}
+                title={state === 'working' ? 'Working' : state === 'idle' ? 'Idle (no hook)' : 'Offline'}
               />
             </div>
 

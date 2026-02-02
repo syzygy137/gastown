@@ -1,12 +1,46 @@
 import React, { useMemo } from 'react';
 
-export default function MetricsBar({ agents, issues, counts, mail, daemon }) {
+function parseAgentMeta(desc) {
+  if (!desc) return {};
+  const meta = {};
+  for (const line of desc.split('\n')) {
+    const m = line.match(/^(\w+):\s*(.+)$/);
+    if (m) meta[m[1]] = m[2].trim();
+  }
+  return meta;
+}
+
+const SESSION_MAP = {
+  'hq-mayor': 'hq-mayor',
+  'hq-deacon': 'hq-deacon',
+  'sl-slop-witness': 'gt-slop-witness',
+  'sl-slop-refinery': 'gt-slop-refinery',
+  'gs-gastown-witness': 'gt-gastown-witness',
+  'gs-gastown-refinery': 'gt-gastown-refinery',
+};
+
+function findSession(agentId, sessions) {
+  const name = SESSION_MAP[agentId] || agentId;
+  return sessions.find(s => s.name === name) || null;
+}
+
+function deriveState(agent, sessions) {
+  const session = findSession(agent.id, sessions);
+  if (!session) return 'offline';
+  const meta = parseAgentMeta(agent.description);
+  const hookBead = agent.hook_bead || meta.hook_bead;
+  if (hookBead && hookBead !== 'null' && hookBead !== '') return 'working';
+  return 'idle';
+}
+
+export default function MetricsBar({ agents, issues, counts, mail, daemon, sessions = [] }) {
   const metrics = useMemo(() => {
     const totalAgents = agents.length;
     const activePolecats = agents.filter(a => {
       const role = (a.role_type || '').toLowerCase();
-      const state = (a.agent_state || '').toLowerCase();
-      return role === 'polecat' && a.status === 'open';
+      if (role !== 'polecat') return false;
+      const state = deriveState(a, sessions);
+      return state === 'working' || state === 'idle';
     }).length;
 
     // Derive from counts array (pre-aggregated by status)
@@ -31,7 +65,7 @@ export default function MetricsBar({ agents, issues, counts, mail, daemon }) {
     }
 
     return { totalAgents, activePolecats, pending, inProgress, mergeQueue, mailCount, health };
-  }, [agents, issues, counts, mail]);
+  }, [agents, issues, counts, mail, sessions]);
 
   return (
     <div className="metrics-bar">

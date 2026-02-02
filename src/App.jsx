@@ -271,6 +271,7 @@ export default function App() {
           counts={state.counts}
           mail={state.mail}
           daemon={state.daemon}
+          sessions={state.sessions}
         />
         <button className="palette-trigger" onClick={() => setPaletteOpen(true)}>
           {'\u2315'} Search

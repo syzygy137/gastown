@@ -36,6 +36,24 @@ function agentRole(session) {
   return parts[parts.length - 1] || 'agent';
 }
 
+function parseAgentMeta(desc) {
+  if (!desc) return {};
+  const meta = {};
+  for (const line of desc.split('\n')) {
+    const m = line.match(/^(\w+):\s*(.+)$/);
+    if (m) meta[m[1]] = m[2].trim();
+  }
+  return meta;
+}
+
+function deriveActivityState(agentData, hasSession) {
+  if (!hasSession) return 'offline';
+  const meta = parseAgentMeta(agentData?.description);
+  const hookBead = agentData?.hook_bead || meta.hook_bead;
+  if (hookBead && hookBead !== 'null' && hookBead !== '') return 'working';
+  return 'idle';
+}
+
 export default function ActivityFeed({ activity = [], agents = [], onSelectAgent }) {
   const scrollRef = useRef(null);
   const [hovering, setHovering] = useState(false);
@@ -59,12 +77,13 @@ export default function ActivityFeed({ activity = [], agents = [], onSelectAgent
 
     return activity.map(a => {
       const agent = agentMap[a.agent] || agentMap[a.session] || null;
+      const hasSession = a.status === 'running' || !!a.lastLines?.length;
       return {
         ...a,
         agentData: agent,
         displayName: agentDisplayName(a.session),
         role: agent?.role_type || agentRole(a.session),
-        state: agent?.agent_state || a.status,
+        state: deriveActivityState(agent, hasSession),
         lastLine: parseLastLine(a.lastLines),
       };
     });
@@ -82,8 +101,8 @@ export default function ActivityFeed({ activity = [], agents = [], onSelectAgent
       onMouseLeave={() => setHovering(false)}
     >
       {enriched.map((a, i) => {
-        const isActive = a.state === 'active' || a.state === 'in-progress' || a.state === 'in_progress';
-        const isIdle = a.lastLine === '';
+        const isActive = a.state === 'working';
+        const isIdle = a.state === 'idle' || a.state === 'offline';
         return (
           <div
             key={a.session}
@@ -104,7 +123,7 @@ export default function ActivityFeed({ activity = [], agents = [], onSelectAgent
               </div>
             </div>
             <div className="activity-row__output">
-              {isIdle ? <span className="activity-idle-label">idle</span> : a.lastLine}
+              {isIdle ? <span className="activity-idle-label">{a.state}</span> : a.lastLine}
             </div>
             <div className="activity-row__time">{relativeTime(a.timestamp)}</div>
           </div>

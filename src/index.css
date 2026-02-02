@@ -346,9 +346,13 @@ body {
   border-radius: 50%;
   flex-shrink: 0;
 }
-.agent-card-v2__dot--live {
+.agent-card-v2__dot--working {
   background: var(--green);
   box-shadow: 0 0 6px var(--green), 0 0 10px rgba(90,158,62,0.4);
+}
+.agent-card-v2__dot--idle {
+  background: var(--yellow);
+  box-shadow: 0 0 6px var(--yellow), 0 0 10px rgba(180,160,60,0.3);
 }
 .agent-card-v2__dot--dead {
   background: var(--red);

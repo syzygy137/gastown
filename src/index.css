@@ -476,7 +476,10 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 4px;
   margin-bottom: 2px;
+  flex: 1;
+  min-width: 0;
 }
 
 .issue-id {
@@ -599,6 +602,98 @@ body {
 .issue-detail-desc .issue-detail-value {
   white-space: pre-wrap;
   font-size: 10px;
+  color: var(--text-dim);
+}
+
+/* ── Sling Controls ── */
+.sling-control {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+}
+
+.sling-btn {
+  width: 22px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 3px 0 0 3px;
+  background: var(--bg);
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.sling-btn:hover:not(:disabled) {
+  border-color: var(--border-accent);
+  background: var(--bg-hover);
+  box-shadow: var(--lamp-glow);
+}
+.sling-btn:active:not(:disabled) {
+  transform: scale(0.93);
+}
+.sling-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.sling-btn--success {
+  border-color: var(--green);
+  color: var(--green);
+}
+.sling-btn--error {
+  border-color: var(--red);
+  color: var(--red);
+}
+
+.sling-target-toggle {
+  width: 14px;
+  height: 20px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-left: none;
+  border-radius: 0 3px 3px 0;
+  background: var(--bg);
+  color: var(--text-dim);
+  font-size: 9px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.sling-target-toggle:hover {
+  color: var(--accent);
+  border-color: var(--border-accent);
+}
+.sling-target-toggle.active {
+  color: var(--accent);
+  background: var(--bg-hover);
+}
+
+.sling-target-input {
+  width: 70px;
+  height: 20px;
+  padding: 0 4px;
+  margin-left: 2px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.sling-target-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 4px rgba(193,127,36,0.2);
+}
+.sling-target-input::placeholder {
   color: var(--text-dim);
 }
 

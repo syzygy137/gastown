@@ -34,6 +34,72 @@ function timeAgo(dateStr) {
   return `${days}d ago`;
 }
 
+function SlingButton({ issueId }) {
+  const [state, setState] = useState('idle');
+  const [showTarget, setShowTarget] = useState(false);
+  const [target, setTarget] = useState('');
+
+  async function sling(e) {
+    e.stopPropagation();
+    setState('loading');
+    const args = ['sling', issueId];
+    if (target.trim()) args.push(target.trim());
+    try {
+      const res = await fetch('/api/cmd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cmd: 'gt', args }),
+      });
+      const data = await res.json();
+      setState(data.ok && !data.error ? 'success' : 'error');
+    } catch {
+      setState('error');
+    }
+    setTimeout(() => setState('idle'), 2000);
+  }
+
+  function toggleTarget(e) {
+    e.stopPropagation();
+    setShowTarget(prev => !prev);
+  }
+
+  const label = state === 'loading' ? '...'
+    : state === 'success' ? '\u2713'
+    : state === 'error' ? '\u2717'
+    : '\u27B3';
+
+  return (
+    <span className="sling-control" onClick={e => e.stopPropagation()}>
+      <button
+        className={`sling-btn sling-btn--${state}`}
+        onClick={sling}
+        disabled={state === 'loading'}
+        title={`Sling ${issueId}${target ? ' to ' + target : ''}`}
+      >
+        {label}
+      </button>
+      <button
+        className={`sling-target-toggle ${showTarget ? 'active' : ''}`}
+        onClick={toggleTarget}
+        title="Set target"
+      >
+        {'\u25BE'}
+      </button>
+      {showTarget && (
+        <input
+          className="sling-target-input"
+          type="text"
+          value={target}
+          onChange={e => setTarget(e.target.value)}
+          onKeyDown={e => { if (e.key === 'Enter') sling(e); }}
+          onClick={e => e.stopPropagation()}
+          placeholder="target"
+        />
+      )}
+    </span>
+  );
+}
+
 export default function IssueBoard({ issues, dependencies = [] }) {
   const [expanded, setExpanded] = useState(new Set());
 
@@ -85,9 +151,12 @@ export default function IssueBoard({ issues, dependencies = [] }) {
               >
                 <div className="issue-card__header">
                   <span className="issue-id">{issue.id}</span>
-                  {issue.priority != null && (
-                    <span className={`issue-priority ${pClass}`}>P{issue.priority}</span>
-                  )}
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {issue.priority != null && (
+                      <span className={`issue-priority ${pClass}`}>P{issue.priority}</span>
+                    )}
+                    <SlingButton issueId={issue.id} />
+                  </span>
                 </div>
                 <div className="issue-title">{issue.title || issue.id}</div>
                 <div className="issue-meta">

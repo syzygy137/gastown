@@ -7,6 +7,7 @@ import EventTimeline from './components/EventTimeline.jsx';
 import FormulaBrowser from './components/FormulaBrowser.jsx';
 import TmuxViewer from './components/TmuxViewer.jsx';
 import Controls from './components/Controls.jsx';
+import MetricsBar from './components/MetricsBar.jsx';
 
 const initial = {
   connected: false,
@@ -88,6 +89,14 @@ export default function App() {
           {state.connected ? 'Live' : 'Reconnecting...'}
         </div>
       </header>
+
+      <MetricsBar
+        agents={state.agents}
+        issues={state.issues}
+        counts={state.counts}
+        mail={state.mail}
+        daemon={state.daemon}
+      />
 
       <div className="town-overview panel">
         <div className="panel-header">Town Overview</div>

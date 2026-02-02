@@ -78,6 +78,76 @@ body {
   50% { opacity: 0.4; box-shadow: 0 0 8px var(--red); }
 }
 
+/* Metrics bar — cockpit instrument panel */
+.metrics-bar {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 8px;
+  padding: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.metric-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 8px 8px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  text-align: center;
+  gap: 4px;
+}
+
+.metric-number {
+  font-size: 24px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metric-label {
+  font-size: 10px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.health-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.health-good { background: var(--green); box-shadow: 0 0 4px var(--green); }
+.health-warn { background: var(--yellow); box-shadow: 0 0 4px var(--yellow); }
+.health-idle { background: var(--red); box-shadow: 0 0 4px var(--red); }
+.health-neutral { background: var(--text-dim); }
+
+.daemon-light {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  margin: 4px auto;
+}
+.daemon-light.running {
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green), 0 0 16px rgba(63, 185, 80, 0.3);
+}
+.daemon-light.stopped {
+  background: var(--red);
+  box-shadow: 0 0 8px var(--red), 0 0 16px rgba(248, 81, 73, 0.3);
+}
+
 .panel {
   background: var(--bg-card);
   border: 1px solid var(--border);

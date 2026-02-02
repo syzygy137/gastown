@@ -852,6 +852,146 @@ body {
 }
 
 /* ── Issue Board (workshop bulletin board) ── */
+
+.issue-board-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* ── Issue Toolbar ── */
+.issue-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.issue-toolbar__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.issue-search-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+  max-width: 360px;
+}
+
+.issue-search {
+  width: 100%;
+  padding: 5px 28px 5px 8px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.issue-search:focus {
+  border-color: var(--accent);
+}
+
+.issue-search::placeholder {
+  color: var(--text-dim);
+  opacity: 0.6;
+}
+
+.issue-search-clear {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+.issue-search-clear:hover {
+  color: var(--text);
+}
+
+.issue-sort-wrap {
+  flex-shrink: 0;
+}
+
+.issue-sort-select {
+  padding: 5px 8px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  outline: none;
+}
+
+.issue-sort-select:focus {
+  border-color: var(--accent);
+}
+
+.issue-result-count {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-dim);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.issue-filter-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.issue-filter-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-dim);
+  margin-right: 2px;
+}
+
+.issue-filter-chip {
+  padding: 2px 8px;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  background: var(--bg);
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.issue-filter-chip:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.issue-filter-chip.active {
+  background: var(--accent);
+  color: var(--bg);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
 .issue-columns {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

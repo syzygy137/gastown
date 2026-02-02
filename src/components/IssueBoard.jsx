@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import StatusBadge from './StatusBadge.jsx';
 import Tooltip from './Tooltip.jsx';
 import LinkedText from './LinkedText.jsx';
@@ -9,6 +9,36 @@ const COLUMNS = [
   { key: 'blocked', label: 'Blocked' },
   { key: 'closed', label: 'Done' },
 ];
+
+const STATUS_FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'open', label: 'Open' },
+  { key: 'in-progress', label: 'In Progress' },
+  { key: 'blocked', label: 'Blocked' },
+  { key: 'closed', label: 'Closed' },
+];
+
+const TYPE_OPTIONS = [
+  { key: 'all', label: 'All' },
+  { key: 'task', label: 'task' },
+  { key: 'bug', label: 'bug' },
+  { key: 'feature', label: 'feature' },
+  { key: 'agent', label: 'agent' },
+  { key: 'message', label: 'message' },
+  { key: 'merge-request', label: 'merge-request' },
+  { key: 'molecule', label: 'molecule' },
+  { key: 'epic', label: 'epic' },
+  { key: 'convoy', label: 'convoy' },
+];
+
+const SORT_OPTIONS = [
+  { key: 'newest', label: 'Newest' },
+  { key: 'priority', label: 'Priority' },
+  { key: 'updated', label: 'Recently updated' },
+];
+
+// Persist filter state across tab switches (component remounts due to key={activeTab})
+const _filterCache = { search: '', status: 'all', type: 'all', sort: 'newest' };
 
 const STATUS_MAP = {
   hooked: 'in-progress',
@@ -114,6 +144,17 @@ function parseAgentMeta(desc) {
 
 export default function IssueBoard({ issues, dependencies = [], agents = [], polecats = [], focusIssueId, onClearFocus, onDrillAgent, onDrillIssue, changedIds = new Set() }) {
   const [expanded, setExpanded] = useState(new Set());
+  const [search, setSearch] = useState(_filterCache.search);
+  const [statusFilter, setStatusFilter] = useState(_filterCache.status);
+  const [typeFilter, setTypeFilter] = useState(_filterCache.type);
+  const [sortBy, setSortBy] = useState(_filterCache.sort);
+  const searchRef = useRef(null);
+
+  // Sync to cache on changes
+  useEffect(() => { _filterCache.search = search; }, [search]);
+  useEffect(() => { _filterCache.status = statusFilter; }, [statusFilter]);
+  useEffect(() => { _filterCache.type = typeFilter; }, [typeFilter]);
+  useEffect(() => { _filterCache.sort = sortBy; }, [sortBy]);
 
   const hookMap = useMemo(() => {
     const m = {};
@@ -160,18 +201,140 @@ export default function IssueBoard({ issues, dependencies = [], agents = [], pol
     });
   };
 
+  // Collect unique types from actual data for showing only relevant type chips
+  const presentTypes = useMemo(() => {
+    const s = new Set();
+    for (const issue of issues) {
+      if (issue.issue_type) s.add(issue.issue_type.toLowerCase());
+    }
+    return s;
+  }, [issues]);
+
+  const visibleTypeOptions = useMemo(() =>
+    TYPE_OPTIONS.filter(t => t.key === 'all' || presentTypes.has(t.key)),
+    [presentTypes]
+  );
+
+  // Filter + sort
+  const filtered = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return issues.filter(issue => {
+      // Text search across id, title, description, assignee
+      if (q) {
+        const haystack = [issue.id, issue.title, issue.description, issue.assignee]
+          .filter(Boolean).join(' ').toLowerCase();
+        if (!haystack.includes(q)) return false;
+      }
+      // Status filter
+      if (statusFilter !== 'all') {
+        const raw = (issue.status || 'open').toLowerCase();
+        const mapped = STATUS_MAP[raw] || raw;
+        if (mapped !== statusFilter) return false;
+      }
+      // Type filter
+      if (typeFilter !== 'all') {
+        const t = (issue.issue_type || '').toLowerCase();
+        if (t !== typeFilter) return false;
+      }
+      return true;
+    });
+  }, [issues, search, statusFilter, typeFilter]);
+
+  const sortFn = useMemo(() => {
+    if (sortBy === 'priority') return (a, b) => (a.priority ?? 99) - (b.priority ?? 99);
+    if (sortBy === 'updated') return (a, b) => {
+      const ta = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+      const tb = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+      return tb - ta;
+    };
+    // newest (by created_at desc)
+    return (a, b) => {
+      const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+      const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+      return tb - ta;
+    };
+  }, [sortBy]);
+
   const grouped = {};
   for (const col of COLUMNS) grouped[col.key] = [];
 
-  for (const issue of issues) {
+  for (const issue of filtered) {
     const raw = (issue.status || 'open').toLowerCase();
     const mapped = STATUS_MAP[raw] || raw;
     if (grouped[mapped]) grouped[mapped].push(issue);
     else grouped['open'].push(issue);
   }
 
+  for (const col of COLUMNS) grouped[col.key].sort(sortFn);
+
+  const totalCount = issues.length;
+  const filteredCount = filtered.length;
+  const hasActiveFilters = search || statusFilter !== 'all' || typeFilter !== 'all';
+
   return (
-    <div className="issue-columns">
+    <div className="issue-board-container">
+      {/* Toolbar */}
+      <div className="issue-toolbar">
+        <div className="issue-toolbar__row">
+          <div className="issue-search-wrap">
+            <input
+              ref={searchRef}
+              className="issue-search"
+              type="text"
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search issues..."
+            />
+            {search && (
+              <button className="issue-search-clear" onClick={() => setSearch('')} title="Clear search">&times;</button>
+            )}
+          </div>
+          <div className="issue-sort-wrap">
+            <select
+              className="issue-sort-select"
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+            >
+              {SORT_OPTIONS.map(o => (
+                <option key={o.key} value={o.key}>{o.label}</option>
+              ))}
+            </select>
+          </div>
+          <span className="issue-result-count">
+            {hasActiveFilters ? `${filteredCount} of ${totalCount}` : totalCount} issue{totalCount !== 1 ? 's' : ''}
+          </span>
+        </div>
+        <div className="issue-toolbar__row">
+          <div className="issue-filter-group">
+            <span className="issue-filter-label">Status</span>
+            {STATUS_FILTERS.map(sf => (
+              <button
+                key={sf.key}
+                className={`issue-filter-chip${statusFilter === sf.key ? ' active' : ''}`}
+                onClick={() => setStatusFilter(sf.key)}
+              >
+                {sf.label}
+              </button>
+            ))}
+          </div>
+          {visibleTypeOptions.length > 2 && (
+            <div className="issue-filter-group">
+              <span className="issue-filter-label">Type</span>
+              {visibleTypeOptions.map(tf => (
+                <button
+                  key={tf.key}
+                  className={`issue-filter-chip${typeFilter === tf.key ? ' active' : ''}`}
+                  onClick={() => setTypeFilter(tf.key)}
+                >
+                  {tf.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Kanban columns */}
+      <div className="issue-columns">
       {COLUMNS.map(col => (
         <div key={col.key} className="issue-col">
           <div className="issue-col-title">
@@ -300,6 +463,7 @@ export default function IssueBoard({ issues, dependencies = [], agents = [], pol
           )}
         </div>
       ))}
+    </div>
     </div>
   );
 }

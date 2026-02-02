@@ -506,6 +506,15 @@ body {
   color: var(--cyan);
 }
 
+.issue-hook-tag {
+  font-size: 10px;
+  color: var(--green);
+  background: rgba(0, 255, 100, 0.1);
+  padding: 1px 6px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
 .issue-expanded {
   margin-top: 8px;
   border-top: 1px solid var(--border);

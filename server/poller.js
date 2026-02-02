@@ -1,5 +1,5 @@
 import { getSnapshot } from './db.js';
-import { tmuxListSessions, tmuxCapture, tmuxCaptureAll, gitInfo, daemonStatus } from './shell.js';
+import { tmuxListSessions, tmuxCapture, tmuxCaptureAll, gitInfo, daemonStatus, polecatList } from './shell.js';
 import { createHash } from 'crypto';
 
 let lastHash = '';
@@ -22,8 +22,8 @@ function broadcast(data) {
 async function sendSnapshot(ws) {
   try {
     const snapshot = getSnapshot();
-    const sessions = await tmuxListSessions();
-    ws.send(JSON.stringify({ type: 'snapshot', ...snapshot, sessions }));
+    const [sessions, polecats] = await Promise.all([tmuxListSessions(), polecatList()]);
+    ws.send(JSON.stringify({ type: 'snapshot', ...snapshot, sessions, polecats }));
   } catch (e) {
     ws.send(JSON.stringify({ type: 'error', message: e.message }));
   }
@@ -107,6 +107,23 @@ export function startActivityPoll() {
   }, 3000);
 }
 
+// Polecat poll — every 5 seconds
+let polecatInterval = null;
+let lastPolecatHash = '';
+export function startPolecatPoll() {
+  if (polecatInterval) return;
+  polecatInterval = setInterval(async () => {
+    try {
+      const list = await polecatList();
+      const hash = JSON.stringify(list);
+      if (hash !== lastPolecatHash) {
+        lastPolecatHash = hash;
+        broadcast({ type: 'polecats', list });
+      }
+    } catch { /* ignore */ }
+  }, 5000);
+}
+
 // Terminal stream poll — every 1.5 seconds (high-frequency, diff-based)
 let terminalInterval = null;
 let lastTerminalHashes = {};
@@ -137,4 +154,5 @@ export function startAll() {
   startDaemonPoll();
   startActivityPoll();
   startTerminalPoll();
+  startPolecatPoll();
 }

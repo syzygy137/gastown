@@ -52,7 +52,7 @@ function deriveState(agent, sessions) {
   return 'idle';
 }
 
-export default function MetricsBar({ agents, issues, counts, mail, daemon, sessions = [] }) {
+export default function MetricsBar({ agents, polecats = [], issues, counts, mail, daemon, sessions = [] }) {
   const metrics = useMemo(() => {
     const totalAgents = agents.length;
     const activePolecats = agents.filter(a => {
@@ -61,6 +61,10 @@ export default function MetricsBar({ agents, issues, counts, mail, daemon, sessi
       const state = deriveState(a, sessions);
       return state === 'working' || state === 'idle';
     }).length;
+    const totalPolecats = polecats.length;
+    const polecatDisplay = totalPolecats > 0
+      ? `${activePolecats}/${totalPolecats}`
+      : String(activePolecats);
 
     const countMap = {};
     for (const c of counts) countMap[c.status] = c.count;
@@ -80,8 +84,8 @@ export default function MetricsBar({ agents, issues, counts, mail, daemon, sessi
       health = ratio > 0.5 ? 'good' : ratio > 0 ? 'warn' : 'idle';
     }
 
-    return { totalAgents, activePolecats, pending, inProgress, mergeQueue, mailCount, health };
-  }, [agents, issues, counts, mail, sessions]);
+    return { totalAgents, activePolecats, polecatDisplay, pending, inProgress, mergeQueue, mailCount, health };
+  }, [agents, polecats, issues, counts, mail, sessions]);
 
   const [history, setHistory] = useState(() => {
     const h = {};
@@ -135,9 +139,9 @@ export default function MetricsBar({ agents, issues, counts, mail, daemon, sessi
 
       <div className="metric-card">
         <div className={`metric-number${flashCls('activePolecats')}`} style={{ color: 'var(--green)' }}>
-          {metrics.activePolecats}
+          {metrics.polecatDisplay}
         </div>
-        <div className="metric-label">Active Polecats</div>
+        <div className="metric-label">Polecats</div>
         <Sparkline data={history.activePolecats} color="var(--green)" />
       </div>
 

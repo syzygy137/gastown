@@ -100,8 +100,33 @@ function SlingButton({ issueId }) {
   );
 }
 
-export default function IssueBoard({ issues, dependencies = [] }) {
+function parseAgentMeta(desc) {
+  if (!desc) return {};
+  const meta = {};
+  for (const line of desc.split('\n')) {
+    const m = line.match(/^(\w+):\s*(.+)$/);
+    if (m) meta[m[1]] = m[2].trim();
+  }
+  return meta;
+}
+
+export default function IssueBoard({ issues, dependencies = [], agents = [], polecats = [] }) {
   const [expanded, setExpanded] = useState(new Set());
+
+  // Build a map of issue_id → agent name for hooked issues
+  const hookMap = useMemo(() => {
+    const m = {};
+    for (const agent of agents) {
+      const meta = parseAgentMeta(agent.description);
+      const hookBead = meta.hook_bead || agent.hook_bead;
+      if (hookBead) {
+        const name = (agent.title || agent.id).split(' - ')[0].split(' (')[0];
+        m[hookBead] = name;
+      }
+    }
+    // Also check issue assignees — if assignee matches a polecat path, use polecat name
+    return m;
+  }, [agents]);
 
   const depsMap = useMemo(() => {
     const m = {};
@@ -163,6 +188,11 @@ export default function IssueBoard({ issues, dependencies = [] }) {
                   <StatusBadge value={issue.issue_type} />
                   <StatusBadge value={issue.status} />
                   {issue.assignee && <span className="issue-assignee">{issue.assignee}</span>}
+                  {hookMap[issue.id] && (
+                    <span className="issue-hook-tag" title={`Hooked by ${hookMap[issue.id]}`}>
+                      on {hookMap[issue.id]}'s hook
+                    </span>
+                  )}
                 </div>
                 {isExpanded && (
                   <div className="issue-expanded">

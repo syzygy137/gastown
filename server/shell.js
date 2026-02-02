@@ -124,6 +124,16 @@ export async function loadFormulas() {
   }
 }
 
+export async function polecatList() {
+  const result = await exec('gt', ['polecat', 'list', '--all', '--json'], { timeout: 10000 });
+  if (!result.ok) return [];
+  try {
+    return JSON.parse(result.stdout);
+  } catch {
+    return [];
+  }
+}
+
 export async function loadConfig() {
   const files = ['town.json', 'daemon.json', 'overseer.json', 'rigs.json'];
   const config = {};

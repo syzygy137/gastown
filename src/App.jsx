@@ -29,6 +29,7 @@ const initial = {
   git: { branches: [], worktrees: [] },
   daemon: { running: false, output: '' },
   terminals: {},
+  polecats: [],
   formulas: [],
   config: {},
 };
@@ -47,10 +48,12 @@ function reducer(state, action) {
       dependencies: action.dependencies || state.dependencies,
       counts: action.counts || state.counts,
       sessions: action.sessions || state.sessions,
+      polecats: action.polecats || state.polecats,
     };
     case 'tmux': return { ...state, sessions: action.sessions || state.sessions };
     case 'git': return { ...state, git: { branches: action.branches || [], worktrees: action.worktrees || [] } };
     case 'daemon': return { ...state, daemon: { running: action.running, output: action.output } };
+    case 'polecats': return { ...state, polecats: action.list || state.polecats };
     case 'activity': return { ...state, activity: action.agents || state.activity };
     case 'terminals': {
       const merged = { ...state.terminals };
@@ -267,6 +270,7 @@ export default function App() {
         </div>
         <MetricsBar
           agents={state.agents}
+          polecats={state.polecats}
           issues={state.issues}
           counts={state.counts}
           mail={state.mail}
@@ -307,9 +311,9 @@ export default function App() {
         </div>
         <div className="tab-content" key={activeTab}>
           {activeTab === 'work' && <WorkTracker issues={state.issues} agents={state.agents} />}
-          {activeTab === 'agents' && <AgentCards agents={state.agents} sessions={state.sessions} onSelectAgent={setSelectedAgent} />}
+          {activeTab === 'agents' && <AgentCards agents={state.agents} polecats={state.polecats} sessions={state.sessions} onSelectAgent={setSelectedAgent} />}
           {activeTab === 'sessions' && <TmuxViewer sessions={state.sessions} />}
-          {activeTab === 'issues' && <IssueBoard issues={state.issues} dependencies={state.dependencies} />}
+          {activeTab === 'issues' && <IssueBoard issues={state.issues} dependencies={state.dependencies} agents={state.agents} polecats={state.polecats} />}
           {activeTab === 'merge-queue' && <MergeQueue issues={state.issues} events={state.events} />}
           {activeTab === 'mail' && <MailFeed mail={state.mail} agents={state.agents} />}
           {activeTab === 'events' && <EventTimeline events={state.events} />}

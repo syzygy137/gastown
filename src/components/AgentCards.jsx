@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import StatusBadge from './StatusBadge.jsx';
 
 function parseAgentMeta(desc) {
@@ -51,13 +51,13 @@ function findSession(agentId, sessions) {
 }
 
 const STATE_COLORS = {
-  active: 'var(--green)',
   working: 'var(--green)',
+  active: 'var(--green)',
   'in-progress': 'var(--green)',
   'in_progress': 'var(--green)',
   idle: 'var(--yellow)',
-  blocked: 'var(--red)',
   offline: 'var(--red)',
+  blocked: 'var(--red)',
   spawning: 'var(--yellow)',
 };
 
@@ -94,24 +94,53 @@ function stateColor(state) {
   return STATE_COLORS[state?.toLowerCase()] || 'var(--yellow)';
 }
 
-export default function AgentCards({ agents, sessions = [], onSelectAgent }) {
-  if (!agents.length) return <div className="empty">No agents found</div>;
+export default function AgentCards({ agents, polecats = [], sessions = [], onSelectAgent }) {
+  // Merge polecats into agent list — polecats that aren't already in agents get synthetic entries
+  const allAgents = useMemo(() => {
+    const agentIds = new Set(agents.map(a => a.id));
+    const merged = [...agents];
+
+    for (const pc of polecats) {
+      const sessionId = `gt-${pc.rig}-${pc.name}`;
+      // Check if this polecat already exists as a DB agent
+      if (!agentIds.has(sessionId) && !agentIds.has(`${pc.rig}-${pc.name}`)) {
+        merged.push({
+          id: sessionId,
+          title: pc.name,
+          role_type: 'polecat',
+          agent_state: pc.state || 'idle',
+          hook_bead: '',
+          status: 'open',
+          description: '',
+          rig: pc.rig,
+          created_at: '',
+          updated_at: '',
+          _fromPolecat: true,
+          _sessionRunning: pc.session_running,
+        });
+      }
+    }
+
+    return merged;
+  }, [agents, polecats]);
+
+  if (!allAgents.length) return <div className="empty">No agents found</div>;
 
   return (
     <div className="agent-grid-v2">
-      {agents.map(a => {
+      {allAgents.map(a => {
         const meta = parseAgentMeta(a.description);
         const role = a.role_type || meta.role_type || '';
         const state = deriveState(a, sessions);
         const shortTitle = (a.title || a.id).split(' - ')[0].split(' (')[0];
         const hookBead = meta.hook_bead || a.hook_bead || null;
         const lastActivity = meta.last_activity || a.last_activity || a.updated_at || null;
-        const rig = meta.rig && meta.rig !== 'null' ? meta.rig : null;
+        const rig = a._fromPolecat ? a.rig : (meta.rig && meta.rig !== 'null' ? meta.rig : null);
         const session = findSession(a.id, sessions);
-        const hasSession = !!session;
+        const hasSession = a._sessionRunning || !!session;
         const roleColor = ROLE_COLORS[role?.toLowerCase()] || stateColor(state);
         const roleLower = role?.toLowerCase() || '';
-        const isActive = state === 'active' || state === 'in-progress' || state === 'in_progress';
+        const isActive = state === 'active' || state === 'in-progress' || state === 'in_progress' || state === 'working';
         const isWorkingPolecat = roleLower === 'polecat' && isActive;
         const progressPct = isActive
           ? 55 + ((a.id.charCodeAt(a.id.length - 1) || 0) % 35)
@@ -138,7 +167,7 @@ export default function AgentCards({ agents, sessions = [], onSelectAgent }) {
 
             <div className="agent-card-v2__badges">
               {role && <StatusBadge value={role} />}
-              <StatusBadge value={state} />
+              <StatusBadge value={derivedState} />
             </div>
 
             {rig && (
@@ -156,7 +185,7 @@ export default function AgentCards({ agents, sessions = [], onSelectAgent }) {
             <div className="agent-card-v2__footer">
               <span className="agent-card-v2__id">{a.id}</span>
               <span className="agent-card-v2__activity">
-                {hasSession && (
+                {session && (
                   <span className="agent-card-v2__session-icon" title={session.attached ? 'Attached' : 'Detached'}>
                     &#9618;{session.attached ? '+' : ''}
                   </span>

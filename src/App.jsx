@@ -15,6 +15,7 @@ import WorkTracker from './components/WorkTracker.jsx';
 import { useToast } from './components/Toast.jsx';
 import LiveTerminals from './components/LiveTerminals.jsx';
 import AchievementToast, { useAchievements } from './components/AchievementToast.jsx';
+import ThemeToggle from './components/ThemeToggle.jsx';
 
 const initial = {
   connected: false,
@@ -353,6 +354,7 @@ export default function App() {
           {'\u2315'} Search
           <kbd className="cmd-palette-kbd">{'\u2318'}K</kbd>
         </button>
+        <ThemeToggle />
         <div className="conn-status">
           <span className={`conn-dot ${state.connected ? 'connected' : 'disconnected'}`} />
           {state.connected ? 'Live' : 'Reconnecting...'}

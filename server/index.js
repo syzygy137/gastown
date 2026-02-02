@@ -106,6 +106,17 @@ app.get('/api/sessions/all', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+app.get('/api/polecats', async (req, res) => {
+  try {
+    const result = await runCommand('gt', ['polecat', 'list', '--all', '--json']);
+    if (result.ok && result.stdout) {
+      res.json(JSON.parse(result.stdout));
+    } else {
+      res.json([]);
+    }
+  } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
 app.get('/api/rigs', (req, res) => {
   try { res.json(getRigs()); }
   catch (e) { res.status(500).json({ error: e.message }); }

@@ -1,11 +1,32 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 export default function Controls({ daemon, agents = [] }) {
   const [output, setOutput] = useState('');
   const [running, setRunning] = useState(false);
   const [customCmd, setCustomCmd] = useState('');
   const [flashBtn, setFlashBtn] = useState(null);
+  const [polecats, setPolecats] = useState([]);
+  const [polecatsLoading, setPolecatsLoading] = useState(false);
+  const [spawnRig, setSpawnRig] = useState('');
+  const [spawnName, setSpawnName] = useState('');
+  const [confirmNuke, setConfirmNuke] = useState(null);
   const outputRef = useRef(null);
+
+  const fetchPolecats = useCallback(async () => {
+    try {
+      setPolecatsLoading(true);
+      const res = await fetch('/api/polecats');
+      const data = await res.json();
+      if (Array.isArray(data)) setPolecats(data);
+    } catch { /* ignore */ }
+    finally { setPolecatsLoading(false); }
+  }, []);
+
+  useEffect(() => {
+    fetchPolecats();
+    const interval = setInterval(fetchPolecats, 10000);
+    return () => clearInterval(interval);
+  }, [fetchPolecats]);
 
   useEffect(() => {
     if (outputRef.current) {
@@ -63,6 +84,23 @@ export default function Controls({ daemon, agents = [] }) {
     const args = parts.slice(1);
     run(cmd, args, null);
     setCustomCmd('');
+  }
+
+  async function handleSpawn(e) {
+    e.preventDefault();
+    const rig = spawnRig.trim();
+    const name = spawnName.trim();
+    if (!rig || !name) return;
+    await run('gt', ['session', 'start', `${rig}/${name}`], `spawn-${name}`);
+    setSpawnRig('');
+    setSpawnName('');
+    setTimeout(fetchPolecats, 2000);
+  }
+
+  async function handleNuke(rig, name) {
+    await run('gt', ['polecat', 'nuke', `${rig}/${name}`], `nuke-${name}`);
+    setConfirmNuke(null);
+    setTimeout(fetchPolecats, 2000);
   }
 
   // Parse daemon info
@@ -149,6 +187,137 @@ export default function Controls({ daemon, agents = [] }) {
           </div>
         </div>
       )}
+
+      {/* Polecat Management */}
+      <div className="btn-group">
+        <div className="btn-group-label">
+          Polecats
+          <span className="polecat-count">{polecats.length}</span>
+          <button
+            className="polecat-refresh"
+            onClick={fetchPolecats}
+            disabled={polecatsLoading}
+            title="Refresh polecat list"
+          >
+            {polecatsLoading ? '...' : '\u21BB'}
+          </button>
+        </div>
+
+        {polecats.length === 0 && !polecatsLoading && (
+          <div className="polecat-empty">No active polecats</div>
+        )}
+
+        {polecats.length > 0 && (
+          <div className="polecat-list">
+            {polecats.map(p => {
+              const key = `${p.rig}/${p.name}`;
+              const isConfirming = confirmNuke === key;
+              return (
+                <div key={key} className={`polecat-row polecat-row--${p.state}`}>
+                  <div className="polecat-info">
+                    <span className="polecat-name">{p.name}</span>
+                    <span className="polecat-rig">{p.rig}</span>
+                    <span className={`polecat-state polecat-state--${p.state}`}>{p.state}</span>
+                    {p.session_running && <span className="polecat-session" title="Session running">{'\u2588'}</span>}
+                  </div>
+                  <div className="polecat-actions">
+                    <button
+                      className="control-btn-mini"
+                      disabled={running}
+                      title={`Check status of ${key}`}
+                      onClick={() => run('gt', ['polecat', 'status', key, '--json'], `status-${p.name}`)}
+                    >
+                      ?
+                    </button>
+                    <button
+                      className="control-btn-mini"
+                      disabled={running}
+                      title={`Peek at ${p.name}`}
+                      onClick={() => run('gt', ['peek', key], `peek-${p.name}`)}
+                    >
+                      {'\u25D1'}
+                    </button>
+                    {!p.session_running && (
+                      <button
+                        className={`control-btn-mini polecat-spawn-btn ${flashBtn === `spawn-${p.name}` ? 'flash' : ''}`}
+                        disabled={running}
+                        title={`Start session for ${key}`}
+                        onClick={() => run('gt', ['session', 'start', key], `spawn-${p.name}`)}
+                      >
+                        {'\u25B6'}
+                      </button>
+                    )}
+                    {p.session_running && (
+                      <button
+                        className={`control-btn-mini polecat-stop-btn ${flashBtn === `stop-${p.name}` ? 'flash' : ''}`}
+                        disabled={running}
+                        title={`Stop session for ${key}`}
+                        onClick={() => run('gt', ['session', 'stop', key], `stop-${p.name}`)}
+                      >
+                        {'\u25A0'}
+                      </button>
+                    )}
+                    {isConfirming ? (
+                      <>
+                        <button
+                          className="control-btn-mini polecat-nuke-confirm"
+                          disabled={running}
+                          onClick={() => handleNuke(p.rig, p.name)}
+                        >
+                          {'\u2713'}
+                        </button>
+                        <button
+                          className="control-btn-mini"
+                          onClick={() => setConfirmNuke(null)}
+                        >
+                          {'\u2717'}
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        className="control-btn-mini polecat-nuke-btn"
+                        disabled={running}
+                        title={`Nuke ${key}`}
+                        onClick={() => setConfirmNuke(key)}
+                      >
+                        {'\u2620'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Spawn new session */}
+        <form onSubmit={handleSpawn} className="polecat-spawn-form">
+          <input
+            type="text"
+            className="cmd-input polecat-input"
+            value={spawnRig}
+            onChange={e => setSpawnRig(e.target.value)}
+            placeholder="rig"
+            disabled={running}
+          />
+          <span className="polecat-slash">/</span>
+          <input
+            type="text"
+            className="cmd-input polecat-input"
+            value={spawnName}
+            onChange={e => setSpawnName(e.target.value)}
+            placeholder="name"
+            disabled={running}
+          />
+          <button
+            type="submit"
+            className="control-btn success polecat-spawn-submit"
+            disabled={running || !spawnRig.trim() || !spawnName.trim()}
+          >
+            Spawn
+          </button>
+        </form>
+      </div>
 
       {/* Quick Commands */}
       <div className="btn-group">

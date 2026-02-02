@@ -71,7 +71,11 @@ export default function ActivityFeed({ activity = [], agents = [], onSelectAgent
     for (const a of agents) {
       agentMap[a.id] = a;
       // Also map by common session name patterns
-      const sessionName = `gt-${a.id.replace(/^(gs|sl)-/, (_, p) => p === 'gs' ? 'gastown-' : 'slop-')}`;
+      // Strip polecat- segment: gs-gastown-polecat-furiosa -> gt-gastown-furiosa
+      const base = a.id
+        .replace(/^(gs|sl)-/, (_, p) => p === 'gs' ? 'gastown-' : 'slop-')
+        .replace(/-polecat-/, '-');
+      const sessionName = `gt-${base}`;
       agentMap[sessionName] = a;
     }
 

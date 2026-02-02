@@ -37,7 +37,12 @@ const SESSION_MAP = {
 };
 
 function getSessionName(agentId) {
-  return SESSION_MAP[agentId] || agentId;
+  if (SESSION_MAP[agentId]) return SESSION_MAP[agentId];
+  // Dynamic polecats: gs-gastown-polecat-furiosa -> gt-gastown-furiosa
+  const polecatMatch = agentId.match(/^gs-(\w+)-polecat-(.+)$/);
+  if (polecatMatch) return `gt-${polecatMatch[1]}-${polecatMatch[2]}`;
+  // Default: swap prefix gs- -> gt-, sl- -> gt-
+  return agentId.replace(/^(gs|sl)-/, 'gt-');
 }
 
 function findSession(agentId, sessions) {

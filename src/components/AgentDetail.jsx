@@ -19,11 +19,15 @@ export default function AgentDetail({ session, agents = [], onClose }) {
   // Find the matching agent metadata
   const agent = agents.find(a => {
     if (a.id === session) return true;
-    // Try common mapping patterns
+    // Try common mapping patterns for infrastructure agents
     const mapped = session
       .replace('gt-gastown-', 'gs-gastown-')
       .replace('gt-slop-', 'sl-slop-');
-    return a.id === mapped;
+    if (a.id === mapped) return true;
+    // Try polecat pattern: gt-gastown-furiosa -> gs-gastown-polecat-furiosa
+    const polecatMatch = session.match(/^gt-(\w+)-(.+)$/);
+    if (polecatMatch && a.id === `gs-${polecatMatch[1]}-polecat-${polecatMatch[2]}`) return true;
+    return false;
   });
 
   useEffect(() => {

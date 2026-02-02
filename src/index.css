@@ -329,6 +329,8 @@ body {
   position: relative;
   box-shadow: inset 0 1px 0 rgba(193,127,36,0.05);
 }
+.agent-card-v2--clickable { cursor: pointer; }
+.agent-card-v2--clickable:hover { background: var(--bg-elevated); }
 .agent-card-v2:active { transform: scale(0.98); }
 .agent-card-v2--active:hover,
 .agent-card-v2--in-progress:hover {

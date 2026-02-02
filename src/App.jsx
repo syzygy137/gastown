@@ -226,7 +226,7 @@ export default function App() {
               <span className="badge badge-molecule">{state.agents.length}</span>
             </div>
             <div className="panel-body agents-scroll">
-              <AgentCards agents={state.agents} sessions={state.sessions} />
+              <AgentCards agents={state.agents} sessions={state.sessions} onSelectAgent={setSelectedAgent} />
             </div>
           </div>
         </div>

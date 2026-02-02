@@ -66,7 +66,7 @@ function stateColor(state) {
   return STATE_COLORS[state?.toLowerCase()] || 'var(--yellow)';
 }
 
-export default function AgentCards({ agents, sessions = [] }) {
+export default function AgentCards({ agents, sessions = [], onSelectAgent }) {
   if (!agents.length) return <div className="empty">No agents found</div>;
 
   return (
@@ -86,8 +86,9 @@ export default function AgentCards({ agents, sessions = [] }) {
         return (
           <div
             key={a.id}
-            className={`agent-card-v2 agent-card-v2--${state?.toLowerCase() || 'idle'}`}
+            className={`agent-card-v2 agent-card-v2--${state?.toLowerCase() || 'idle'}${hasSession ? ' agent-card-v2--clickable' : ''}`}
             style={{ borderLeftColor: roleColor }}
+            onClick={() => hasSession && onSelectAgent?.(getSessionName(a.id))}
           >
             <div className="agent-card-v2__header">
               <div className="agent-card-v2__name">{shortTitle}</div>

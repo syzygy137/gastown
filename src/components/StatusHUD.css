@@ -1,0 +1,70 @@
+.status-hud {
+  position: fixed;
+  z-index: 10;
+  display: flex;
+  gap: 16px;
+  padding: 12px 16px;
+  pointer-events: none;
+  font-family: var(--font-mono);
+}
+
+.status-hud--top-left {
+  top: 16px;
+  left: 16px;
+}
+
+.status-hud--top-right {
+  top: 16px;
+  right: 16px;
+}
+
+.status-hud--bottom-left {
+  bottom: 16px;
+  left: 16px;
+}
+
+.status-hud--bottom-right {
+  bottom: 16px;
+  right: 16px;
+}
+
+.status-hud__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-hud__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.status-hud__dot--on {
+  background: #5a9e3e;
+  box-shadow: 0 0 6px rgba(90,158,62,0.5);
+}
+
+.status-hud__dot--off {
+  background: #b5442e;
+  box-shadow: 0 0 6px rgba(181,68,46,0.4);
+}
+
+.status-hud__value {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: rgba(193,127,36,0.8);
+}
+
+.status-hud__label {
+  font-size: 0.7rem;
+  color: rgba(193,127,36,0.45);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.status-hud__clock {
+  font-size: 0.75rem;
+  color: rgba(193,127,36,0.35);
+  letter-spacing: 1.5px;
+}

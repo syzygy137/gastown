@@ -30,6 +30,7 @@ export default function SpeechFeed({ messages = [], currentMessage = null }) {
     if (currentMessage && messages.length > prevCountRef.current) {
       setTyping(true);
       const timer = setTimeout(() => setTyping(false), 600);
+      prevCountRef.current = messages.length;
       return () => clearTimeout(timer);
     }
     prevCountRef.current = messages.length;
@@ -37,7 +38,6 @@ export default function SpeechFeed({ messages = [], currentMessage = null }) {
 
   // Only show the last MAX_VISIBLE messages
   const visible = messages.slice(-MAX_VISIBLE);
-  const fadeStart = Math.max(0, visible.length - 1);
 
   if (!messages.length && !typing) {
     return (

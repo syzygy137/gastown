@@ -1,0 +1,101 @@
+/* StatusHUD — corner-positioned overlay */
+.status-hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 50;
+  font-family: var(--font-mono);
+}
+
+.status-hud__cell {
+  position: absolute;
+  pointer-events: auto;
+  padding: 6px 10px;
+  background: rgba(26, 20, 16, 0.72);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(139, 105, 20, 0.18);
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(193, 127, 36, 0.06);
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--text-dim);
+  white-space: nowrap;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-theme="light"] .status-hud__cell {
+  background: rgba(240, 230, 210, 0.78);
+  border-color: rgba(160, 104, 24, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08),
+              inset 0 1px 0 rgba(160, 104, 24, 0.06);
+}
+
+.status-hud__tl {
+  top: 56px;
+  left: 8px;
+}
+
+.status-hud__tr {
+  top: 56px;
+  right: 8px;
+}
+
+.status-hud__bl {
+  bottom: 8px;
+  left: 8px;
+}
+
+.status-hud__br {
+  bottom: 8px;
+  right: 8px;
+}
+
+.status-hud__label {
+  color: var(--text-bright);
+  font-weight: 600;
+  font-size: 11px;
+}
+
+.status-hud__dim {
+  color: var(--text-dim);
+  font-size: 10px;
+}
+
+.status-hud__health-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.status-hud__health-dot--green {
+  background: var(--green);
+  box-shadow: 0 0 4px rgba(90, 158, 62, 0.5);
+}
+
+.status-hud__health-dot--yellow {
+  background: var(--yellow);
+  box-shadow: 0 0 4px rgba(212, 160, 23, 0.5);
+}
+
+.status-hud__health-dot--red {
+  background: var(--red);
+  box-shadow: 0 0 4px rgba(181, 68, 46, 0.5);
+}
+
+.status-hud__mail-subject {
+  display: block;
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 1px;
+}

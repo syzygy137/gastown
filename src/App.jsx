@@ -20,6 +20,7 @@ import AchievementToast, { useAchievements } from './components/AchievementToast
 import ThemeToggle from './components/ThemeToggle.jsx';
 import SettingsPanel from './components/SettingsPanel.jsx';
 import ActivityFeed from './components/ActivityFeed.jsx';
+import StatusHUD from './components/StatusHUD.jsx';
 import useBackgroundTab from './hooks/useBackgroundTab.js';
 import useSettings from './hooks/useSettings.js';
 
@@ -558,6 +559,19 @@ export default function App() {
 
       {/* Achievement toasts */}
       <AchievementToast toasts={toasts} onDismiss={dismissToast} />
+
+      {/* Status HUD overlay */}
+      <StatusHUD
+        agents={state.agents}
+        mailCount={state.mail.length}
+        mailLatest={state.mail.length > 0 ? (state.mail[0].subject || '') : ''}
+        health={(() => {
+          if (state.agents.length === 0) return 'yellow';
+          const alive = state.agents.filter(a => a.status === 'open').length;
+          const ratio = alive / state.agents.length;
+          return ratio > 0.5 ? 'green' : ratio > 0 ? 'yellow' : 'red';
+        })()}
+      />
     </div>
   );
 }

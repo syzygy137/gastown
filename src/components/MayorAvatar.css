@@ -1,0 +1,156 @@
+.mayor-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1410;
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.mayor-avatar__figure {
+  animation: mayor-bob 3s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+.mayor-avatar--speaking .mayor-avatar__figure {
+  animation: mayor-bob-speaking 1.2s ease-in-out infinite;
+}
+
+/* --- Bobbing / breathing --- */
+@keyframes mayor-bob {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-3px) scale(1.01); }
+}
+
+@keyframes mayor-bob-speaking {
+  0%, 100% { transform: translateY(0) scale(1); }
+  30% { transform: translateY(-5px) scale(1.02); }
+  60% { transform: translateY(-2px) scale(1.005); }
+}
+
+/* --- Speaking glow border --- */
+.mayor-avatar--speaking {
+  box-shadow:
+    0 0 12px rgba(193, 127, 36, 0.4),
+    0 0 30px rgba(193, 127, 36, 0.15),
+    inset 0 0 12px rgba(193, 127, 36, 0.08);
+  border: 1px solid rgba(193, 127, 36, 0.5);
+}
+
+/* --- Monocle glint --- */
+.mayor-avatar__glint {
+  opacity: 0;
+  animation: monocle-glint 5s ease-in-out infinite;
+}
+
+.mayor-avatar--speaking .mayor-avatar__glint {
+  animation: monocle-glint 2.5s ease-in-out infinite;
+}
+
+@keyframes monocle-glint {
+  0%, 85%, 100% { opacity: 0; }
+  90% { opacity: 0.9; }
+  95% { opacity: 0; }
+}
+
+/* --- Cigar glow --- */
+.mayor-avatar__cigar-tip {
+  animation: cigar-glow 4s ease-in-out infinite;
+}
+
+.mayor-avatar--speaking .mayor-avatar__cigar-tip {
+  animation: cigar-glow 1.5s ease-in-out infinite;
+}
+
+@keyframes cigar-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* --- Smoke particles --- */
+.mayor-avatar__smoke {
+  position: absolute;
+  pointer-events: none;
+}
+
+.mayor-avatar__smoke-particle {
+  opacity: 0;
+  animation: smoke-rise 4s ease-out infinite;
+}
+
+.mayor-avatar__smoke-particle:nth-child(2) {
+  animation-delay: 1.2s;
+}
+
+.mayor-avatar__smoke-particle:nth-child(3) {
+  animation-delay: 2.4s;
+}
+
+.mayor-avatar__smoke-particle:nth-child(4) {
+  animation-delay: 3.4s;
+}
+
+.mayor-avatar--speaking .mayor-avatar__smoke-particle {
+  animation-duration: 2.5s;
+}
+
+.mayor-avatar--speaking .mayor-avatar__smoke-particle:nth-child(2) {
+  animation-delay: 0.7s;
+}
+
+.mayor-avatar--speaking .mayor-avatar__smoke-particle:nth-child(3) {
+  animation-delay: 1.4s;
+}
+
+.mayor-avatar--speaking .mayor-avatar__smoke-particle:nth-child(4) {
+  animation-delay: 2s;
+}
+
+@keyframes smoke-rise {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.5);
+  }
+  15% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.2;
+    transform: translate(-4px, -18px) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(-8px, -38px) scale(1.4);
+  }
+}
+
+/* --- Monocle chain sway --- */
+.mayor-avatar__chain {
+  animation: chain-sway 3s ease-in-out infinite;
+  transform-origin: top;
+}
+
+.mayor-avatar--speaking .mayor-avatar__chain {
+  animation: chain-sway 1.5s ease-in-out infinite;
+}
+
+@keyframes chain-sway {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(2deg); }
+}
+
+/* --- Speaking aura pulse --- */
+.mayor-avatar__aura {
+  opacity: 0;
+}
+
+.mayor-avatar--speaking .mayor-avatar__aura {
+  animation: aura-pulse 2s ease-in-out infinite;
+}
+
+@keyframes aura-pulse {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 0.15; }
+}
